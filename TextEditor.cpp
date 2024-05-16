@@ -65,10 +65,11 @@ void help()
         "h - explain every command;\n"
         "1 - append text symbols to the end\n"
         "2 - start the new line\n"
-        "3 - use files to loading/saving the information\n"
+        "3 - use files to saving the information\n"
         "4 - print the current text to console\n"
         "5 - insert the text by line and symbol index\n"
-        "6 - search\n");
+        "6 - search\n"
+        "7 - use files to loading the information\n");
 }
 
 void Print(text* editor)
@@ -106,7 +107,22 @@ void StartNewLine(text* editor)
     }
     editor->currentLine++;
 }
+void SaveToFile(text* editor, char fileName[])
+{
+    FILE* file;
+    file = fopen(fileName, "w");
+    if (file == NULL)
+    {
+        ("This file cannot be opened or something bad happened to it!\n");
+        exit(0);
+    }
+    for (int i = 0; i < editor->currentLine + 1; i++)
+    {
+        fputs(editor->text[i], file);
+    }
+    fclose(file);
 
+}
 void ProcessCommand(int command, text* editor)
 {
     switch (command)
@@ -129,7 +145,11 @@ void ProcessCommand(int command, text* editor)
         printf("Current line:%d\n", editor->currentLine);
         break;
     case 3:
-        printf("...");
+        printf("Enter a file name in which you want to store the text:\n");
+        char fileName[50];
+        fgets(fileName, sizeof(fileName), stdin);
+        fileName[strcspn(fileName, "\n")] = '\0';
+        SaveToFile(editor, fileName);
         break;
     case 4:
         Print(editor);
@@ -161,7 +181,7 @@ int main()
         if (scanf("%d", &command) != 1)
         {
             printf("The command is not an integer!\n");
-            while (getchar() != '\n'); // Clear input buffer
+            while (getchar() != '\n'); 
             continue;
            
         }
