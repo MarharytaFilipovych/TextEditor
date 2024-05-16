@@ -6,12 +6,14 @@
 #include <string.h>
 #define INITIAL_SIZE_ROWS 10
 #define INITIAL_SIZE_COLUMNS 10
+#include <io.h>
 
 typedef struct {
     int lines;
     int symbolsPerLine;
     char** text;
     int currentLine;
+    
 } text;
 
 char** createArray(int rows, int columns)
@@ -119,9 +121,31 @@ void SaveToFile(text* editor, char fileName[])
     for (int i = 0; i < editor->currentLine + 1; i++)
     {
         fputs(editor->text[i], file);
+        fputc('\n', file);
     }
     fclose(file);
+    printf("Text has been saved successfully!");
 
+}
+int fileExists(char* fileName)
+{
+    return _access(fileName, 0) == 0;
+}
+void LoadFromFile(text* editor, char fileName[])
+{
+    FILE* file;
+    file = fopen(fileName, "r");
+    if (file == NULL)
+    {
+        printf("Error opening file");
+        return;
+    }
+    char bufer[50]; 
+    while (fgets(bufer, sizeof(bufer), file) != NULL)
+    {
+        AppendToEnd(editor, bufer);
+    }
+    fclose(file);
 }
 void ProcessCommand(int command, text* editor)
 {
@@ -145,10 +169,14 @@ void ProcessCommand(int command, text* editor)
         printf("Current line:%d\n", editor->currentLine);
         break;
     case 3:
-        printf("Enter a file name in which you want to store the text:\n");
+        printf("Enter a filename in which you want to store the text:\n");
         char fileName[50];
         fgets(fileName, sizeof(fileName), stdin);
-        fileName[strcspn(fileName, "\n")] = '\0';
+
+        if (strlen(fileName) > 0)
+        {
+            fileName[strcspn(fileName, "\n")] = '\0';
+        }
         SaveToFile(editor, fileName);
         break;
     case 4:
@@ -159,6 +187,22 @@ void ProcessCommand(int command, text* editor)
         break;
     case 6:
         printf("...");
+        break;
+    case 7:
+        do {
+            printf("Enter a filename from which you want to load data into the text editor:\n ");
+            fgets(fileName, sizeof(fileName), stdin);
+
+            if (strlen(fileName) > 0 && fileName[strlen(fileName) - 1] == '\n') {
+                fileName[strlen(fileName) - 1] = '\0';
+            }
+            if (!fileExists(fileName))
+            {
+                printf("This file does not exist!\n");
+            }
+        } while (!fileExists(fileName));
+
+        LoadFromFile(editor, fileName);
         break;
     default:
         printf("The command is not implemented. Type '9' for help.\n");
