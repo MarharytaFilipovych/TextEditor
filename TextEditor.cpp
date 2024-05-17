@@ -102,19 +102,16 @@ void MakeMoreLines(text* editor, int line) {
     }
 
 
-
-
-
-
 void StartNewLine(text* editor)
 {
-    
     if (editor->currentLine + 1 > editor->lines)
     {
         MakeMoreLines(editor, editor->currentLine);
     }
     editor->currentLine++;
 }
+
+
 void SaveToFile(text* editor, char fileName[])
 {
     FILE* file;
@@ -169,7 +166,7 @@ void MakeLineLonger(text* editor, int currentLength, int newLength)
 }
 
 void InsertAtIndex(text* editor, int line, int place, char newText[]) {
-    
+
     if (line >= editor->lines) {
         MakeMoreLines(editor, line);
         editor->currentLine = line;
@@ -180,13 +177,7 @@ void InsertAtIndex(text* editor, int line, int place, char newText[]) {
     int newLength = strlen(newText);
 
     if (currentLength + newLength >= editor->symbolsPerLine) {
-        int newCapacity = (currentLength + newLength + 1) * 2;
-        editor->text[line] = (char*)realloc(editor->text[line], newCapacity * sizeof(char));
-        if (editor->text[line] == NULL) {
-            printf("Memory reallocation failed\n");
-            exit(0);
-        }
-        editor->symbolsPerLine = newCapacity;
+        MakeLineLonger(editor, currentLength, newLength);
     }
 
     if (place > currentLength) {
@@ -206,15 +197,29 @@ void InsertAtIndex(text* editor, int line, int place, char newText[]) {
     }
 
     editor->text[line][currentLength + newLength] = '\0';
-    //editor->currentLine = temp;
+
+
 }
+void LineToModify(text* editor)
+{
+    
+    int line;
+    printf("Enter a line which you want to modify:\n");
+    scanf("%d", &line); // Read the line number from the user
+    while (getchar() != '\n');
+    // Consume the newline character left in the input buffer
 
-
+    if (line >= editor->lines) // Use >= instead of >
+    {
+        MakeMoreLines(editor, line);
+    }
+    editor->currentLine = line ; // Adjust line number to zero-based index
+    printf("Your line: %d\n", editor->currentLine );
+}
 
 void ProcessCommand(int command, text* editor)
 {
     char newText[100];
-    int temp = editor->currentLine;
 
     switch (command)
     {
@@ -251,7 +256,8 @@ void ProcessCommand(int command, text* editor)
     case 5:
         printf("Choose line and index:\n");
         int line;
-        int place;       
+        int place;
+
         scanf("%d %d", &line, &place);
         if (line < 0 || place < 0)
         {
@@ -264,6 +270,7 @@ void ProcessCommand(int command, text* editor)
         newText[strcspn(newText, "\n")] = '\0';
 
         InsertAtIndex(editor, line, place, newText);
+
         break;
     case 6:
         printf("...");
@@ -283,6 +290,9 @@ void ProcessCommand(int command, text* editor)
         } while (!fileExists(fileName));
 
         LoadFromFile(editor, fileName);
+        break;
+    case 8:
+        LineToModify(editor);
         break;
     default:
         printf("The command is not implemented. Type '9' for help.\n");
