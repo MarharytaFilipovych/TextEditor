@@ -80,32 +80,38 @@ void Print(text* editor)
         printf("%s\n", editor->text[i]);
     }
 }
-
-void StartNewLine(text* editor)
-{
-    
-    if (editor->currentLine + 1 == editor->lines)
-    {
-        int newLinesCapacity = editor->lines * 2;
+void MakeMoreLines(text* editor, int line) {
+   
+        int newLinesCapacity = line * 2;
         char** temp = editor->text;
         editor->text = (char**)realloc(editor->text, newLinesCapacity * sizeof(char*));
-        if (editor->text == NULL)
-        {
+        if (editor->text == NULL) {
             printf("Out of Memory\n");
             editor->text = temp;
             return;
         }
-        for (int i = editor->lines; i < newLinesCapacity; i++)
-        {
+        for (int i = editor->lines; i < newLinesCapacity; i++) {
             editor->text[i] = (char*)malloc(INITIAL_SIZE_COLUMNS * sizeof(char));
-            if (editor->text[i] == NULL)
-            {
+            if (editor->text[i] == NULL) {
                 printf("Memory allocation failed\n");
                 exit(0);
             }
-            editor->text[i][0] = '\0';  
+            editor->text[i][0] = '\0';
         }
         editor->lines = newLinesCapacity;
+    }
+
+
+
+
+
+
+void StartNewLine(text* editor)
+{
+    
+    if (editor->currentLine + 1 > editor->lines)
+    {
+        MakeMoreLines(editor, editor->currentLine);
     }
     editor->currentLine++;
 }
@@ -144,11 +150,72 @@ void LoadFromFile(text* editor, char fileName[])
     while (fgets(bufer, sizeof(bufer), file) != NULL)
     {
         AppendToEnd(editor, bufer);
+
     }
     fclose(file);
 }
+
+
+void MakeLineLonger(text* editor, int currentLength, int newLength)
+{
+    int newCapacity = (currentLength + newLength + 1) * 2;
+    editor->text[editor->currentLine] = (char*)realloc(editor->text[editor->currentLine], newCapacity * sizeof(char));
+    if (editor->text[editor->currentLine] == NULL) {
+        printf("Memory reallocation failed\n");
+        exit(0);
+    }
+    editor->symbolsPerLine = newCapacity;
+    editor->text[editor->currentLine][0] = '\0';
+}
+
+void InsertAtIndex(text* editor, int line, int place, char newText[]) {
+    
+    if (line >= editor->lines) {
+        MakeMoreLines(editor, line);
+        editor->currentLine = line;
+    }
+    editor->currentLine = line;
+
+    int currentLength = strlen(editor->text[line]);
+    int newLength = strlen(newText);
+
+    if (currentLength + newLength >= editor->symbolsPerLine) {
+        int newCapacity = (currentLength + newLength + 1) * 2;
+        editor->text[line] = (char*)realloc(editor->text[line], newCapacity * sizeof(char));
+        if (editor->text[line] == NULL) {
+            printf("Memory reallocation failed\n");
+            exit(0);
+        }
+        editor->symbolsPerLine = newCapacity;
+    }
+
+    if (place > currentLength) {
+        for (int i = currentLength; i < place; i++) {
+            editor->text[line][i] = ' ';
+        }
+        editor->text[line][place] = '\0';
+        currentLength = place;
+    }
+
+    for (int i = currentLength; i >= place; i--) {
+        editor->text[line][i + newLength] = editor->text[line][i];
+    }
+
+    for (int i = 0; i < newLength; i++) {
+        editor->text[line][place + i] = newText[i];
+    }
+
+    editor->text[line][currentLength + newLength] = '\0';
+    //editor->currentLine = temp;
+}
+
+
+
 void ProcessCommand(int command, text* editor)
 {
+    char newText[100];
+    int temp = editor->currentLine;
+
     switch (command)
     {
     case 9:
@@ -159,7 +226,6 @@ void ProcessCommand(int command, text* editor)
         break;
     case 1:
         printf("Enter text to append:\n");
-        char newText[100];
         fgets(newText, sizeof(newText), stdin);
         AppendToEnd(editor, newText);
         break;
@@ -183,7 +249,21 @@ void ProcessCommand(int command, text* editor)
         Print(editor);
         break;
     case 5:
-        printf("...");
+        printf("Choose line and index:\n");
+        int line;
+        int place;       
+        scanf("%d %d", &line, &place);
+        if (line < 0 || place < 0)
+        {
+            printf("Line index and place index cannot be negative!\n", line);
+            return;
+        }
+        while (getchar() != '\n');
+        printf("Enter text to insert:\n");
+        fgets(newText, sizeof(newText), stdin);
+        newText[strcspn(newText, "\n")] = '\0';
+
+        InsertAtIndex(editor, line, place, newText);
         break;
     case 6:
         printf("...");
