@@ -4,32 +4,44 @@
 #include <string.h>
 #define INITIAL_SIZE_ROWS 10
 #define INITIAL_SIZE_COLUMNS 10
+#define INITIAL_SIZE_OF_SYMBOLS_FOR_USER 10
 #include <io.h>
 
 typedef struct {
     size_t lines;
     size_t symbolsPerLine;
     char** text;
-    int currentLine;
-    
+    int currentLine;   
 } text;
+void TellIfAllocationFailed(char* array, FILE* file)
+{
+    if (array == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    if (file != NULL)
+    {
+        fclose(file);
+    }
+}
+void TellIfAllocationFailedFor2DArray(char** array)
+{
+    if (array == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+}
 
 char** createArray(int rows, int columns)
 {
     char** array = (char**)malloc(rows * sizeof(char*));
-    if (array == NULL)
-    {
-        printf("Memory allocation failed\n");
-        exit(0);
-    }
+    TellIfAllocationFailedFor2DArray(array);
     for (int i = 0; i < rows; i++)
     {
         array[i] = (char*)malloc(columns * sizeof(char));
-        if (array[i] == NULL)
-        {
-            printf("Memory allocation failed\n");
-            exit(0);
-        }
+        TellIfAllocationFailed(array[i], NULL);
         array[i][0] = '\0';  
     }
     return array;
@@ -39,10 +51,7 @@ void MakeLineLonger(text* editor, size_t currentLength, size_t newLength)
 {
     size_t newCapacity = currentLength + newLength + 1;
     char* temp = (char*)realloc(editor->text[editor->currentLine], newCapacity * sizeof(char));
-    if (temp == NULL) {
-        printf("Memory reallocation failed\n");
-        exit(0);
-    }
+    TellIfAllocationFailed(temp, NULL);
     editor->text[editor->currentLine] = temp;
     editor->symbolsPerLine = newCapacity;
 }
@@ -50,17 +59,11 @@ void MakeLineLonger(text* editor, size_t currentLength, size_t newLength)
 void MakeMoreLines(text* editor, int line) {
     size_t newLinesCapacity = line + 1;
     char** temp = (char**)realloc(editor->text, newLinesCapacity * sizeof(char*));
-    if (temp == NULL) {
-        printf("Out of Memory\n");
-        exit(EXIT_FAILURE);
-    }
+    TellIfAllocationFailedFor2DArray(temp);
     editor->text = temp;
     for (size_t i = editor->lines; i < newLinesCapacity; i++) {
         editor->text[i] = (char*)malloc(editor->symbolsPerLine * sizeof(char));
-        if (editor->text[i] == NULL) {
-            printf("Memory allocation failed\n");
-            exit(EXIT_FAILURE);
-        }
+        TellIfAllocationFailed(editor->text[i], NULL);
         editor->text[i][0] = '\0';
     }
     editor->lines = newLinesCapacity;
@@ -70,11 +73,6 @@ void AppendToEnd(text* editor, char newText[])
 {
     size_t currentLength = strlen(editor->text[editor->currentLine]);
     size_t newLength = strlen(newText);
-
-    if (newLength > 0 && newText[newLength - 1] == '\n') {
-        newText[newLength - 1] = '\0';
-        newLength--;
-    }
 
     if (currentLength + newLength >= editor->symbolsPerLine)
     {
@@ -109,11 +107,14 @@ void Print(text* editor)
 
 void StartNewLine(text* editor)
 {
+    printf("Starting new line...\n");
     if (editor->currentLine + 1 > editor->lines)
     {
         MakeMoreLines(editor, editor->currentLine);
     }
     editor->currentLine++;
+    printf("Current line:%d\n", editor->currentLine);
+
 }
 
 
@@ -152,16 +153,13 @@ void CleanEditor(text* editor)
 {
     if (editor == NULL || editor->text == NULL)
         exit(EXIT_FAILURE);
-
     for (int i = 0; i < editor->lines; i++)
     {
           free(editor->text[i]);
-            //editor->text[i] = NULL;
     }
-
     free(editor->text);
-    //editor->text = NULL;
-    //editor->lines = 0;
+    printf("Editor has been cleand!\n");
+    
 }
 
 void LoadFromFile(text* editor, char fileName[]) {
@@ -173,22 +171,14 @@ void LoadFromFile(text* editor, char fileName[]) {
 
     size_t bufferCapacity = INITIAL_SIZE_COLUMNS;
     char* buffer = (char*)malloc(bufferCapacity * sizeof(char));
-    if (buffer == NULL) {
-        printf("Memory allocation failed\n");
-        fclose(file);
-        exit(EXIT_FAILURE);
-    }
+    TellIfAllocationFailed(buffer, NULL);
+
     InitializeEditor(editor);
     while (fgets(buffer, bufferCapacity, file) != NULL) {
         while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
             bufferCapacity *= 2;
             char* temp = (char*)realloc(buffer, bufferCapacity * sizeof(char));
-            if (temp == NULL) {
-                printf("Memory reallocation failed\n");
-                free(buffer);
-                fclose(file);
-                exit(EXIT_FAILURE);
-            }
+            TellIfAllocationFailed(temp, NULL);
             buffer = temp;
             fgets(buffer + strlen(buffer), bufferCapacity - strlen(buffer), file);
         }
@@ -319,14 +309,51 @@ void KMPSearch(text* editor, char* pattern)
             }
         }
     }
+    printf("No pattern like yours can be found!\n");
     free(lps);
 }
-void ProcessCommand(int command, text* editor)
-{
-    char newText[100];
+typedef struct {
+    char* text;
+    size_t capacity; 
+} arrayForUserInput;
 
-    switch (command)
+char* CreateArrayForUserInput(arrayForUserInput* userInput) {
+    char* text = (char*)malloc(INITIAL_SIZE_OF_SYMBOLS_FOR_USER * sizeof(char));
+    TellIfAllocationFailed(text, NULL);
+    text[0] = '\0';
+    userInput->text = text; 
+    userInput->capacity = INITIAL_SIZE_OF_SYMBOLS_FOR_USER;
+    return text;
+}
+
+void MakeUserArrayLonger(arrayForUserInput* userInput) {
+    size_t newCapacity = userInput->capacity * 2;
+    char* temp = (char*)realloc(userInput->text, newCapacity * sizeof(char));
+    TellIfAllocationFailed(temp, NULL);
+    userInput->text = temp;
+    userInput->capacity = newCapacity;
+}
+
+void TakeUserInput(arrayForUserInput* userInput)
+{
+    size_t currentLength = 0;
+    while (fgets(userInput->text + currentLength, userInput->capacity - currentLength, stdin))
     {
+        currentLength += strlen(userInput->text + currentLength);
+        if (userInput->text[currentLength - 1] == '\n')
+        {
+            break;
+        }
+        MakeUserArrayLonger(userInput);
+    }
+    userInput->text[strcspn(userInput->text, "\n")] = '\0';
+}
+
+void ProcessCommand(int command, text* editor) {
+    arrayForUserInput userInput;
+    userInput.text = CreateArrayForUserInput(&userInput);
+    char fileName[50];
+    switch (command) {
     case 9:
         help();
         break;
@@ -335,69 +362,50 @@ void ProcessCommand(int command, text* editor)
         break;
     case 1:
         printf("Enter text to append:\n");
-        fgets(newText, sizeof(newText), stdin);
-        AppendToEnd(editor, newText);
+        TakeUserInput(&userInput);
+        AppendToEnd(editor, userInput.text);
         break;
     case 2:
-        printf("Starting new line...\n");
         StartNewLine(editor);
-        printf("Current line:%d\n", editor->currentLine);
         break;
     case 3:
-        printf("Enter a filename in which you want to store the text:\n");
-        char fileName[50];
-        fgets(fileName, sizeof(fileName), stdin);
-
-        if (strlen(fileName) > 0)
-        {
-            fileName[strcspn(fileName, "\n")] = '\0';
-        }
-        SaveToFile(editor, fileName);
+        do {
+            printf("Enter a filename in which you want to store the text:\n");
+            TakeUserInput(&userInput);
+        } while (strlen(userInput.text) == 0);       
+        SaveToFile(editor, userInput.text);
         break;
     case 4:
         Print(editor);
         break;
     case 5:
         printf("Choose line and index:\n");
-        int line;
-        int place;
-
-        scanf("%d %d", &line, &place);
-        if (line < 0 || place < 0)
-        {
-            printf("Line index and place index cannot be negative!\n");
-            exit(EXIT_FAILURE);
+        int line, place;
+        if (scanf("%d %d", &line, &place) != 2 || line < 0 || place < 0) {
+            printf("Invalid input\n");
+            while (getchar() != '\n');
+            break;
         }
+        
         while (getchar() != '\n');
         printf("Enter text to insert:\n");
-        fgets(newText, sizeof(newText), stdin);
-        newText[strcspn(newText, "\n")] = '\0';
-
-        InsertAtIndex(editor, line, place, newText);
-
+        TakeUserInput(&userInput);
+        InsertAtIndex(editor, line, place, userInput.text);
         break;
     case 6:
         printf("Enter a pattern:\n");
-        char pattern[100];
-        fgets(pattern, sizeof(pattern), stdin);
-        pattern[strcspn(pattern, "\n")] = '\0';
-        KMPSearch(editor, pattern);
-
+        TakeUserInput(&userInput);
+        KMPSearch(editor, userInput.text);
         break;
     case 7:
         do {
-            printf("Enter a filename from which you want to load data into the text editor:\n ");
-            fgets(fileName, sizeof(fileName), stdin);
-
-            if (strlen(fileName) > 0 && fileName[strlen(fileName) - 1] == '\n') {
-                fileName[strlen(fileName) - 1] = '\0';
-            }
-            if (!fileExists(fileName))
-            {
+            printf("Enter a filename from which you want to load data into the text editor:\n");
+            TakeUserInput(&userInput);
+            if (!fileExists(userInput.text)) {
                 printf("This file does not exist!\n");
             }
-        } while (!fileExists(fileName));
-        LoadFromFile(editor, fileName);
+        } while (!fileExists(userInput.text));
+        LoadFromFile(editor, userInput.text);
         break;
     case 8:
         LineToModify(editor);
@@ -414,25 +422,22 @@ void ProcessCommand(int command, text* editor)
     default:
         printf("The command is not implemented. Type '9' for help.\n");
     }
+    free(userInput.text);
 }
 
-int main()
-{
+int main() {
     printf("Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)\n");
     text editor;
     int command;
     InitializeEditor(&editor);
     do {
         printf("Enter command: ");
-        
-        if (scanf("%d", &command) != 1)
-        {
-            printf("The command is not an integer!\n");
-            while (getchar() != '\n'); 
+        if (scanf("%d", &command) != 1) {
+            //printf("The command is not an integer!\n");
+            while (getchar() != '\n');
             continue;
-           
         }
-        while (getchar() != '\n'); 
+        while (getchar() != '\n');
         ProcessCommand(command, &editor);
     } while (command != 0);
     CleanEditor(&editor);
