@@ -8,7 +8,7 @@ There are 12 commands at total. There is a description and screenshots of comman
 
 0: exit the text editor (close program):
 ![](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Screenshots%20of%20commands%20work/Command%200.png)
-1: append text symbols, whiich a user types, to the end of the current line:
+1: append text symbols, which a user types, to the end of the current line:
 ![](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Screenshots%20of%20commands%20work/Command%201.png)
 2: start a new line:
 ![](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Screenshots%20of%20commands%20work/Command%202.png)
@@ -31,3 +31,54 @@ There are 12 commands at total. There is a description and screenshots of comman
 ![](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Screenshots%20of%20commands%20work/Command%2010.png)
 11: clear console (it is better to show this command in the classroom);
 
+### First combined task
+Steps:
+append
+save
+print
+append
+load from file table.txt
+print
+![]()
+![]()
+
+### Second combined task
+Steps:
+append
+start new line
+append
+insert at index 
+print
+![]()
+
+### Third combined task
+Steps:
+load data from file table.txt
+search for a specific pattern 2 times
+insert text at the beginning
+print
+![]()
+![]()
+
+### Fourth combined task
+Steps:
+append
+insert at line 5 something
+switch to a second line
+append
+save to a file
+print
+![]()
+
+### Fifth combined task
+Steps:
+start new line
+append words "hello my friends"
+print
+insert "dear " between "my" and "friends" (index 1 9)
+print
+clear editor
+print
+exit
+![]()
+![]()

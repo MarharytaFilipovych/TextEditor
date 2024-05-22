@@ -223,7 +223,7 @@ void InsertAtIndex(text* editor, int line, int place, char newText[]) {
         currentLength = place;
     }
 
-    for (size_t i = currentLength; i >= place; i--) {
+    for (int i = currentLength; i >= place; i--) {
         editor->text[line][i + newLength] = editor->text[line][i];
     }
 
