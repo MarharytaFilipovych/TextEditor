@@ -288,7 +288,7 @@ void KMPSearch(text* editor, char* pattern)
         return;
     }    LPSArray(pattern, M, lps);
 
-
+    bool foundPattern = false;
     for (int k = 0; k < editor->lines; k++)
     {
         size_t N = strlen(editor->text[k]);
@@ -304,6 +304,7 @@ void KMPSearch(text* editor, char* pattern)
             if (j == M)
             {
                 printf("Your pattern is found at location (line, place): %d %d\n", k, i - j);
+                foundPattern = true;
                 j = lps[j - 1];
             }
             else if (i < N && pattern[j] != editor->text[k][i])
@@ -319,7 +320,10 @@ void KMPSearch(text* editor, char* pattern)
             }
         }
     }
-    printf("No pattern like yours can be found!\n");
+    if (!foundPattern)
+    {
+        printf("No pattern like yours can be found!\n");
+    }
     free(lps);
 }
 typedef struct {
