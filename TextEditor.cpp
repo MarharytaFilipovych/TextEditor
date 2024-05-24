@@ -5,7 +5,6 @@
 #define INITIAL_SIZE_ROWS 10
 #define INITIAL_SIZE_COLUMNS 10
 #define INITIAL_SIZE_OF_SYMBOLS_FOR_USER 10
-#include <io.h>
 
 typedef struct {
     size_t lines;
@@ -62,7 +61,8 @@ void MakeMoreLines(text* editor, int line) {
         {
             printf("Memory reallocation failed\n");
             exit(EXIT_FAILURE);
-        }        editor->text[i][0] = '\0';
+        }        
+        editor->text[i][0] = '\0';
     }
     editor->lines = newLinesCapacity;
 }
@@ -123,7 +123,7 @@ void SaveToFile(text* editor, char fileName[])
     if (file == NULL)
     {
         ("This file cannot be opened or something bad happened to it!\n");
-        exit(EXIT_FAILURE);
+        return;
     }
     for (int i = 0; i < editor->lines; i++)
     {
@@ -133,10 +133,6 @@ void SaveToFile(text* editor, char fileName[])
     fclose(file);
     printf("Text has been saved successfully!\n");
 
-}
-int fileExists(char* fileName)
-{
-    return _access(fileName, 0) == 0;
 }
 
 void InitializeEditor(text* editor)
@@ -164,8 +160,8 @@ void CleanEditor(text* editor)
 void LoadFromFile(text* editor, char fileName[]) {
     FILE* file = fopen(fileName, "r");
     if (file == NULL) {
-        printf("Error opening file\n");
-        exit(EXIT_FAILURE);
+        printf("Error opening file. It looks like it does not exist!\n");
+        return;
     }
 
     size_t bufferCapacity = INITIAL_SIZE_COLUMNS;
@@ -178,7 +174,7 @@ void LoadFromFile(text* editor, char fileName[]) {
     InitializeEditor(editor);
     while (fgets(buffer, bufferCapacity, file) != NULL) {
         while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
-            bufferCapacity *= 2;
+            bufferCapacity += bufferCapacity;
             char* temp = (char*)realloc(buffer, bufferCapacity * sizeof(char));
             if (temp == NULL)
             {
@@ -362,7 +358,17 @@ void FreeUserInput(arrayForUserInput* userInput)
     userInput->text = NULL;
 }
 
-
+void AdjustNeededSizeForUserArray(arrayForUserInput* userInput, size_t realLength)
+{
+    char* temp = (char*)realloc(userInput->text, (realLength + 1) * sizeof(char));
+    if (temp == NULL)
+    {
+        printf("Memory reallocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    userInput->text = temp;
+    userInput->capacity = realLength + 1;
+}
 
 void TakeUserInput(arrayForUserInput* userInput)
 {
@@ -377,6 +383,7 @@ void TakeUserInput(arrayForUserInput* userInput)
         MakeUserArrayLonger(userInput);
     }
     userInput->text[strcspn(userInput->text, "\n")] = '\0';
+    AdjustNeededSizeForUserArray(userInput, currentLength);
 }
 
 void DoCommand1(text* editor, arrayForUserInput* userInput)
@@ -422,16 +429,12 @@ void DoCommand6(text* editor, arrayForUserInput* userInput)
 }
 void DoCommand7(text* editor, arrayForUserInput* userInput)
 {
-    do {
-        printf("Enter a filename from which you want to load data into the text editor:\n");
-        TakeUserInput(userInput);
-        if (!fileExists(userInput->text)) {
-            printf("This file does not exist!\n");
-        }
-    } while (!fileExists(userInput->text));
+    printf("Enter a filename from which you want to load data into the text editor:\n");
+    TakeUserInput(userInput);
     LoadFromFile(editor, userInput->text);
     FreeUserInput(userInput);
 }
+
 void ProcessCommand(int command, text* editor) {
     arrayForUserInput userInput;
     userInput.text = CreateArrayForUserInput(&userInput);

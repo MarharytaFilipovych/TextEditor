@@ -137,4 +137,21 @@ Clears the console output. This is better to demostrate in a classroom.
 8. Exit
 
 ![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%205(picture1).png)
-![Test 5 ](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test5(picture%202).png)
+![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test5(picture%202).png)
+
+### Sixth Combined Task
+
+**Steps**
+1. Append to end
+2. Print
+3. Insert in the middle something
+4. Print
+5. Save to a file 
+6. Clear the text editor
+7. Print
+8. Load from the same file, used for saving, data
+9. Print
+10. Exit
+
+![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%205(picture1).png)
+![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%205(picture1).png)
