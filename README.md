@@ -153,5 +153,5 @@ Clears the console output. This is better to demostrate in a classroom.
 9. Print
 10. Exit
 
-![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%205(picture1).png)
-![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%205(picture1).png)
+![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%206%20(picture%201).png)
+![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%206(picture%202).png)
