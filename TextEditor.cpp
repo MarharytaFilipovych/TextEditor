@@ -436,15 +436,14 @@ void DoCommand7(text* editor, arrayForUserInput* userInput)
     LoadFromFile(editor, userInput->text);
     FreeUserInput(userInput);
 }
-void AdjustSizeOfLine(text* editor, int line, int length)
-{
+void AdjustSizeOfLine(text* editor, int line, int length) {
     char* temp = (char*)realloc(editor->text[line], (length + 1) * sizeof(char));
-    if (temp == NULL)
-    {
+    if (temp == NULL) {
         printf("Memory reallocation failed\n");
         exit(EXIT_FAILURE);
     }
-    editor->text[line] == temp;
+    editor->text[line] = temp; 
+    editor->text[line][length] = '\0'; 
 }
 void DeleteSymbols(text* editor, int line, int index, int number, int currentLength)
 {
