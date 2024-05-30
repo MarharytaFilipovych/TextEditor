@@ -93,7 +93,8 @@ void help()
         "9 - explain every command;\n"
         "10 - clear editor\n"
         "11 - clear console\n"
-        "12 - delete some data\n");
+        "12 - delete some data\n"
+        "13 - undo\n");
 }
 
 void Print(text* editor)
@@ -197,7 +198,7 @@ void LoadFromFile(text* editor, char fileName[]) {
     printf("File has been loaded successfully!\n");
 }
 
-void InsertAtIndex(text* editor, int line, int place, char newText[]) {
+void InsertAtIndex(text* editor, int line, int place, char* newText) {
 
     if (line >= editor->lines) {
         MakeMoreLines(editor, line);
@@ -471,8 +472,45 @@ void DoCommand12(text* editor) {
         printf("Something is wrong in your numbers! Look higher!\n");
         return;
     }
-
     DeleteSymbols(editor, line, index, number, currentLength);
+}
+void InsertWithReplacement(text* editor, int line, int index, char* newText)
+{
+    size_t currentLength = strlen(editor->text[line]);
+    size_t newTextLength = strlen(newText);
+    printf("%d - current length", currentLength);
+    printf("%d - new", newTextLength);
+    if (index + newTextLength > currentLength)
+    {
+        printf("You cannot replace more symbols than present!\n");
+        return;
+    }
+    
+    for (int i = 0; i < newTextLength; i++) {
+         editor->text[line][index + i] = newText[i];
+    }
+
+   }
+void DoCommand14(text* editor, arrayForUserInput* userInput)
+{
+    printf("Choose line and index:\n");
+    int index, line;
+    if (scanf("%d %d", &line, &index) != 2 || line < 0 || index < 0) {
+        printf("Invalid input\n");
+        while (getchar() != '\n');
+        return;
+    }
+    int currentLength = strlen(editor->text[line]);
+    if (line > editor->lines || index > currentLength || currentLength == 0)
+    {
+        printf("Something is wrong in your numbers! \n");
+        return;
+    }    
+    while (getchar() != '\n');
+    printf("Enter text to insert:\n");
+    TakeUserInput(userInput);
+    InsertWithReplacement(editor, line, index, userInput->text);
+    FreeUserInput(userInput);
 }
 void ProcessCommand(int command, text* editor) {
     arrayForUserInput userInput;
@@ -519,6 +557,11 @@ void ProcessCommand(int command, text* editor) {
         break;
     case 12:
         DoCommand12(editor);
+        break;
+    case 13:
+        break;
+    case 14:
+        DoCommand14(editor, &userInput);
         break;
     default:
         printf("The command is not implemented. Type '9' for help.\n");
