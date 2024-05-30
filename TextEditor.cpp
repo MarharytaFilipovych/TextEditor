@@ -94,7 +94,8 @@ void help()
         "10 - clear editor\n"
         "11 - clear console\n"
         "12 - delete some data\n"
-        "13 - undo\n");
+        "13 - undo\n"
+        "14 - insert with replacement\n");
 }
 
 void Print(text* editor)
@@ -405,20 +406,25 @@ void DoCommand3(text* editor, arrayForUserInput* userInput)
     SaveToFile(editor, userInput->text);
     FreeUserInput(userInput);
 }
-
-void DoCommand5(text* editor, arrayForUserInput* userInput)
-{
+int ChooseLineIndex(text* editor, int* line, int* index) {
     printf("Choose line and index:\n");
-    int place, line;
-    if (scanf("%d %d", &line, &place) != 2 || line < 0 || place < 0) {
+    if (scanf("%d %d", line, index) != 2 || *line < 0 || *index < 0) {
         printf("Invalid input\n");
         while (getchar() != '\n');
+        return 0; 
+    } 
+    while (getchar() != '\n'); 
+    return 1; 
+}
+void DoCommand5(text* editor, arrayForUserInput* userInput)
+{
+    int line, index;
+    if (!ChooseLineIndex(editor, &line, &index)) {
         return;
     }
-    while (getchar() != '\n');
     printf("Enter text to insert:\n");
     TakeUserInput(userInput);
-    InsertAtIndex(editor, line, place, userInput->text);
+    InsertAtIndex(editor, line, index, userInput->text);
     FreeUserInput(userInput);
 }
 
@@ -454,31 +460,41 @@ void DeleteSymbols(text* editor, int line, int index, int number, int currentLen
     currentLength -= number;
     AdjustSizeOfLine(editor, line, currentLength);
 }
-void DoCommand12(text* editor) {
-    
+int ChooseLineIndexNumber(text* editor, int* line, int* index, int* number, size_t* currentLength) 
+{
     printf("Choose line, index and number of symbols:\n");
-    int line, index, number;
-    if (scanf("%d %d %d", &line, &index, &number) != 3 || line < 0 || index < 0 || number < 0)
-    {
+    if (scanf("%d %d %d", line, index, number) != 3 || *line < 0 || *index < 0 || *number < 0) {
         printf("Invalid input!\n");
-        while (getchar() != '\n');
-        return;
+        while (getchar() != '\n');  
+        return 0; 
     }
-    int currentLength = strlen(editor->text[line]);
-    printf("There are %d lines and, on your chosen line there are %d symbols\n", editor->lines, currentLength);
-    if (number > currentLength || line > editor->lines || index > currentLength || currentLength == 0)
-    {   
+    *currentLength = strlen(editor->text[*line]);
+    printf("There are %d lines and, on your chosen line there are %d symbols\n", editor->lines, *currentLength);
+
+    if (*index >= *currentLength || *number > *currentLength - *index || *currentLength == 0 || *line >= editor->lines) {
         printf("Something is wrong in your numbers! Look higher!\n");
+        return 0;
+    }
+    return 1; 
+}
+
+
+void DoCommand12(text* editor) {
+    int line, index, number;
+    size_t currentLength;
+
+    if (!ChooseLineIndexNumber(editor, &line, &index, &number, &currentLength)) {
         return;
     }
+
     DeleteSymbols(editor, line, index, number, currentLength);
 }
+
 void InsertWithReplacement(text* editor, int line, int index, char* newText)
 {
     size_t currentLength = strlen(editor->text[line]);
     size_t newTextLength = strlen(newText);
-    printf("%d - current length", currentLength);
-    printf("%d - new", newTextLength);
+   
     if (index + newTextLength > currentLength)
     {
         printf("You cannot replace more symbols than present!\n");
@@ -490,30 +506,79 @@ void InsertWithReplacement(text* editor, int line, int index, char* newText)
     }
 
    }
-void DoCommand14(text* editor, arrayForUserInput* userInput)
+typedef struct 
 {
-    printf("Choose line and index:\n");
-    int index, line;
-    if (scanf("%d %d", &line, &index) != 2 || line < 0 || index < 0) {
-        printf("Invalid input\n");
-        while (getchar() != '\n');
+    int capacity;
+    char* array;
+}clipboard;
+
+char* CreateClipboard(clipboard* buffer)
+{
+    buffer->array = (char*)malloc(INITIAL_SIZE_COLUMNS * sizeof(char));
+    if (buffer->array == NULL) {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    buffer->capacity = INITIAL_SIZE_COLUMNS;
+    buffer->array[0] = '\0'; 
+    return buffer->array;
+}
+void AddToClipboard(clipboard* buffer, char* text)
+{
+    if (strlen(buffer->array) + strlen(text) >= buffer->capacity)
+    {
+        buffer->capacity = strlen(text) + 1 + buffer->capacity;
+        char* temp = (char*)realloc(buffer->array, buffer->capacity * sizeof(char));
+        if (temp == NULL)
+        {
+            printf("Memory reallocation failed\n");
+            exit(EXIT_FAILURE);
+        }
+        buffer->array = temp;
+    }
+    strcat(buffer->array, text);
+}
+void Cut(text* editor, clipboard* buffer)
+{
+    int line, index, number;
+    size_t currentLength;
+    if (!ChooseLineIndexNumber(editor, &line, &index, &number, &currentLength))
+    {
         return;
     }
+    char* textToCut = (char*)malloc((number + 1) * sizeof(char));
+    if (textToCut == NULL)
+    {
+        printf("Memory reallocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    strncpy(textToCut, &editor->text[line][index], number);
+    textToCut[number] = '\0';
+    AddToClipboard(buffer, textToCut);
+    DeleteSymbols(editor, line, index, number, currentLength);
+    free(textToCut);
+}
+void DoCommand14(text* editor, arrayForUserInput* userInput)
+{
+    int line, index;
+    ChooseLineIndex(editor, &line, &index);
     int currentLength = strlen(editor->text[line]);
     if (line > editor->lines || index > currentLength || currentLength == 0)
     {
         printf("Something is wrong in your numbers! \n");
         return;
     }    
-    while (getchar() != '\n');
     printf("Enter text to insert:\n");
     TakeUserInput(userInput);
     InsertWithReplacement(editor, line, index, userInput->text);
     FreeUserInput(userInput);
 }
 void ProcessCommand(int command, text* editor) {
+
     arrayForUserInput userInput;
     userInput.text = CreateArrayForUserInput(&userInput);
+    clipboard buffer;
+    buffer.array = CreateClipboard(&buffer);
     switch (command) {
     case 9:
         help();
@@ -562,6 +627,11 @@ void ProcessCommand(int command, text* editor) {
     case 14:
         DoCommand14(editor, &userInput);
         break;
+    case 15:
+        Cut(editor, &buffer);
+        printf("%s\n", buffer.array);
+        break;
+
     default:
         printf("The command is not implemented. Type '9' for help.\n");
     }
