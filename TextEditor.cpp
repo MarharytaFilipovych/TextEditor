@@ -92,7 +92,8 @@ void help()
         "8 - switch line\n"
         "9 - explain every command;\n"
         "10 - clear editor\n"
-        "11 - clear console\n");
+        "11 - clear console\n"
+        "12 - delete some data\n");
 }
 
 void Print(text* editor)
@@ -434,7 +435,45 @@ void DoCommand7(text* editor, arrayForUserInput* userInput)
     LoadFromFile(editor, userInput->text);
     FreeUserInput(userInput);
 }
+void AdjustSizeOfLine(text* editor, int line, int length)
+{
+    char* temp = (char*)realloc(editor->text[line], (length + 1) * sizeof(char));
+    if (temp == NULL)
+    {
+        printf("Memory reallocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    editor->text[line] == temp;
+}
+void DeleteSymbols(text* editor, int line, int index, int number, int currentLength)
+{
+    for (int i = index; i < currentLength; i++)
+    {
+        editor->text[line][i] = editor->text[line][i + number];
+    }
+    currentLength -= number;
+    AdjustSizeOfLine(editor, line, currentLength);
+}
+void DoCommand12(text* editor) {
+    
+    printf("Choose line, index and number of symbols:\n");
+    int line, index, number;
+    if (scanf("%d %d %d", &line, &index, &number) != 3 || line < 0 || index < 0 || number < 0)
+    {
+        printf("Invalid input!\n");
+        while (getchar() != '\n');
+        return;
+    }
+    int currentLength = strlen(editor->text[line]);
+    printf("There are %d lines and, on your chosen line there are %d symbols\n", editor->lines, currentLength);
+    if (number > currentLength || line > editor->lines || index > currentLength || currentLength == 0)
+    {   
+        printf("Something is wrong in your numbers! Look higher!\n");
+        return;
+    }
 
+    DeleteSymbols(editor, line, index, number, currentLength);
+}
 void ProcessCommand(int command, text* editor) {
     arrayForUserInput userInput;
     userInput.text = CreateArrayForUserInput(&userInput);
@@ -477,6 +516,9 @@ void ProcessCommand(int command, text* editor) {
         break;
     case 11:
         system("cls");
+        break;
+    case 12:
+        DoCommand12(editor);
         break;
     default:
         printf("The command is not implemented. Type '9' for help.\n");
