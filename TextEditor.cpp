@@ -95,7 +95,8 @@ void help()
         "11 - clear console\n"
         "12 - delete some data\n"
         "13 - undo\n"
-        "14 - insert with replacement\n");
+        "14 - insert with replacement\n"
+        "20 - display contents of your clipboard\n");
 }
 
 void Print(text* editor)
@@ -522,6 +523,29 @@ void InitializeClipboard(Clipboard* buffer)
     buffer->size = 0;
     buffer->top = NULL;
 }
+void DisplayContentsOfClipboard(Clipboard* buffer)
+{
+    printf("Contents of your clipboard:\n");
+    Node* current = NULL;
+    current = buffer->top;
+    while (current != NULL)
+    {
+        printf("%s\n", current->text);
+        current = current->next;
+    }
+
+}
+void FreeClipboard(Clipboard* buffer)
+{
+    Node* current = buffer->top;
+    while (current != NULL)
+    {
+        free(current->text);
+        free(current);
+        current = current->next;
+    }
+    free(buffer);
+}
 void AddToClipboard(Clipboard* buffer, const char* text) {
     Node* node = (Node*)malloc(sizeof(Node));
     if (node == NULL) {
@@ -534,23 +558,29 @@ void AddToClipboard(Clipboard* buffer, const char* text) {
     buffer->top = node;
     buffer->size++;
 }
-void Cut(text* editor, Clipboard* buffer) {
+void CutOrCopy(text* editor, Clipboard* buffer, bool needCut) {
     int line, index, number;
     size_t currentLength;
     if (!ChooseLineIndexNumber(editor, &line, &index, &number, &currentLength)) {
         return;
     }
-    char* textToCut = (char*)malloc((number + 1) * sizeof(char));
-    if (textToCut == NULL) {
+    char* textToBuffer = (char*)malloc((number + 1) * sizeof(char));
+    if (textToBuffer == NULL) {
         printf("Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
-    strncpy(textToCut, &editor->text[line][index], number);
-    textToCut[number] = '\0';
-    AddToClipboard(buffer, textToCut);
-    DeleteSymbols(editor, line, index, number, currentLength);
-    free(textToCut);
+
+    strncpy(textToBuffer, &editor->text[line][index], number);
+    textToBuffer[number] = '\0';
+    AddToClipboard(buffer, textToBuffer);
+    if (needCut)
+    {
+        DeleteSymbols(editor, line, index, number, currentLength);
+    }
+    free(textToBuffer);
 }
+
+
 void DoCommand14(text* editor, arrayForUserInput* userInput)
 {
     int line, index;
@@ -570,9 +600,8 @@ void ProcessCommand(int command, text* editor, Clipboard* buffer) {
 
     arrayForUserInput userInput;
     userInput.text = CreateArrayForUserInput(&userInput);
-    
-    Node* current = NULL;
-    
+    bool needCut = false;
+
     switch (command) {
     case 9:
         help();
@@ -622,16 +651,15 @@ void ProcessCommand(int command, text* editor, Clipboard* buffer) {
         DoCommand14(editor, &userInput);
         break;
     case 15:
-        Cut(editor, buffer);
-        printf("%d\n", buffer->size);
-        current = buffer->top;
-        printf("Clipboard Contents:\n");
-        while (current != NULL) {
-            printf("%s\n", current->text);
-            current = current->next;
-        }
+        needCut = true;
+        CutOrCopy(editor, buffer, needCut);
         break;
-
+    case 16:        
+        CutOrCopy(editor, buffer, needCut);
+        break;
+    case 20:
+        DisplayContentsOfClipboard(buffer);
+        break;
     default:
         printf("The command is not implemented. Type '9' for help.\n");
     }
@@ -660,5 +688,6 @@ int main() {
         ProcessCommand(command, &editor, &buffer);
     } while (command != 0);
     CleanEditor(&editor);
+    FreeClipboard(&buffer);
     return 0;
 }
