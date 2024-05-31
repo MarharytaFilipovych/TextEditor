@@ -506,50 +506,43 @@ void InsertWithReplacement(text* editor, int line, int index, char* newText)
     }
 
    }
-typedef struct 
-{
-    int capacity;
-    char* array;
-}clipboard;
+ struct Node {
+    char* text;
+     Node* next;
+};
 
-char* CreateClipboard(clipboard* buffer)
+typedef struct {
+    int size;
+    Node* top;
+} Clipboard;
+
+
+void InitializeClipboard(Clipboard* buffer)
 {
-    buffer->array = (char*)malloc(INITIAL_SIZE_COLUMNS * sizeof(char));
-    if (buffer->array == NULL) {
+    buffer->size = 0;
+    buffer->top = NULL;
+}
+void AddToClipboard(Clipboard* buffer, const char* text) {
+    Node* node = (Node*)malloc(sizeof(Node));
+    if (node == NULL) {
         printf("Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
-    buffer->capacity = INITIAL_SIZE_COLUMNS;
-    buffer->array[0] = '\0'; 
-    return buffer->array;
+    node->text = _strdup(text);
+    
+    node->next = buffer->top;
+    buffer->top = node;
+    buffer->size++;
 }
-void AddToClipboard(clipboard* buffer, char* text)
-{
-    if (strlen(buffer->array) + strlen(text) >= buffer->capacity)
-    {
-        buffer->capacity = strlen(text) + 1 + buffer->capacity;
-        char* temp = (char*)realloc(buffer->array, buffer->capacity * sizeof(char));
-        if (temp == NULL)
-        {
-            printf("Memory reallocation failed\n");
-            exit(EXIT_FAILURE);
-        }
-        buffer->array = temp;
-    }
-    strcat(buffer->array, text);
-}
-void Cut(text* editor, clipboard* buffer)
-{
+void Cut(text* editor, Clipboard* buffer) {
     int line, index, number;
     size_t currentLength;
-    if (!ChooseLineIndexNumber(editor, &line, &index, &number, &currentLength))
-    {
+    if (!ChooseLineIndexNumber(editor, &line, &index, &number, &currentLength)) {
         return;
     }
     char* textToCut = (char*)malloc((number + 1) * sizeof(char));
-    if (textToCut == NULL)
-    {
-        printf("Memory reallocation failed\n");
+    if (textToCut == NULL) {
+        printf("Memory allocation failed\n");
         exit(EXIT_FAILURE);
     }
     strncpy(textToCut, &editor->text[line][index], number);
@@ -567,18 +560,19 @@ void DoCommand14(text* editor, arrayForUserInput* userInput)
     {
         printf("Something is wrong in your numbers! \n");
         return;
-    }    
+    }
     printf("Enter text to insert:\n");
     TakeUserInput(userInput);
     InsertWithReplacement(editor, line, index, userInput->text);
     FreeUserInput(userInput);
 }
-void ProcessCommand(int command, text* editor) {
+void ProcessCommand(int command, text* editor, Clipboard* buffer) {
 
     arrayForUserInput userInput;
     userInput.text = CreateArrayForUserInput(&userInput);
-    clipboard buffer;
-    buffer.array = CreateClipboard(&buffer);
+    
+    Node* current = NULL;
+    
     switch (command) {
     case 9:
         help();
@@ -628,8 +622,14 @@ void ProcessCommand(int command, text* editor) {
         DoCommand14(editor, &userInput);
         break;
     case 15:
-        Cut(editor, &buffer);
-        printf("%s\n", buffer.array);
+        Cut(editor, buffer);
+        printf("%d\n", buffer->size);
+        current = buffer->top;
+        printf("Clipboard Contents:\n");
+        while (current != NULL) {
+            printf("%s\n", current->text);
+            current = current->next;
+        }
         break;
 
     default:
@@ -644,6 +644,8 @@ void ProcessCommand(int command, text* editor) {
 
 int main() {
     printf("Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)\n");
+    Clipboard buffer;
+    InitializeClipboard(&buffer);
     text editor;
     int command;
     InitializeEditor(&editor);
@@ -655,7 +657,7 @@ int main() {
             continue;
         }
         while (getchar() != '\n');
-        ProcessCommand(command, &editor);
+        ProcessCommand(command, &editor, &buffer);
     } while (command != 0);
     CleanEditor(&editor);
     return 0;
