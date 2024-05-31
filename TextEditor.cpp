@@ -81,7 +81,7 @@ void AppendToEnd(text* editor, char newText[])
 
 void help()
 {
-    printf("There is an explanation for every command:\n"      
+    printf("There is an explanation for every command:\n"
         "1 - append text symbols to the end\n"
         "2 - start the new line\n"
         "3 - use files to saving the information\n"
@@ -96,7 +96,13 @@ void help()
         "12 - delete some data\n"
         "13 - undo\n"
         "14 - insert with replacement\n"
+        "15 - cut\n"
+        "16 - copy\n"
+        "17 - paste\n"
+        "18 - undo\n"
+        "19 - redo\n"
         "20 - display contents of your clipboard\n");
+       
 }
 
 void Print(text* editor)
@@ -525,9 +531,14 @@ void InitializeClipboard(Clipboard* buffer)
 }
 void DisplayContentsOfClipboard(Clipboard* buffer)
 {
-    printf("Contents of your clipboard:\n");
     Node* current = NULL;
     current = buffer->top;
+    if (current == NULL)
+    {
+        printf("Your clipboard is empty!\n");
+        return;
+    }
+    printf("Contents of your clipboard:\n");
     while (current != NULL)
     {
         printf("%s\n", current->text);
@@ -540,13 +551,14 @@ void FreeClipboard(Clipboard* buffer)
     Node* current = buffer->top;
     while (current != NULL)
     {
-        free(current->text);
+        Node* next = current->next;
+        //free(current->text);
         free(current);
-        current = current->next;
+        current = next;
     }
     free(buffer);
 }
-void AddToClipboard(Clipboard* buffer, const char* text) {
+void AddToClipboard(Clipboard* buffer, char* text) {
     Node* node = (Node*)malloc(sizeof(Node));
     if (node == NULL) {
         printf("Memory allocation failed\n");
@@ -557,6 +569,16 @@ void AddToClipboard(Clipboard* buffer, const char* text) {
     node->next = buffer->top;
     buffer->top = node;
     buffer->size++;
+}
+Node* PopFromClipboardAndReturnLastValue(Clipboard* buffer)
+{
+    Node* temp = buffer->top;
+    if (temp == NULL)
+    {
+        return NULL;
+    }
+    buffer->top = buffer->top->next;
+    return temp;
 }
 void CutOrCopy(text* editor, Clipboard* buffer, bool needCut) {
     int line, index, number;
@@ -578,6 +600,24 @@ void CutOrCopy(text* editor, Clipboard* buffer, bool needCut) {
         DeleteSymbols(editor, line, index, number, currentLength);
     }
     free(textToBuffer);
+}
+void Paste(text* editor, Clipboard* buffer)
+{
+    if (buffer->top == NULL)
+    {
+        printf("There is nothing to paste, your clipboard is empty!\n");
+        return;
+    }
+    int line, index;
+    size_t currentLength;
+    if (!ChooseLineIndex(editor, &line, &index)) {
+        return;
+    }
+    Node* node = PopFromClipboardAndReturnLastValue(buffer);
+    InsertAtIndex(editor, line, index, node->text);
+
+
+
 }
 
 
@@ -656,6 +696,13 @@ void ProcessCommand(int command, text* editor, Clipboard* buffer) {
         break;
     case 16:        
         CutOrCopy(editor, buffer, needCut);
+        break;
+    case 17:
+        Paste(editor, buffer);
+        break;
+    case 18:
+        break;
+    case 19:
         break;
     case 20:
         DisplayContentsOfClipboard(buffer);
