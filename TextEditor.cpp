@@ -324,21 +324,10 @@ public:
         return 1;
     }
     void Clear() {
-        if (text == NULL)
-            exit(EXIT_FAILURE);
-        for (int i = 0; i < lines; i++)
-        {
-            free(text[i]);
-            text[i] = NULL;
-        }
-        free(text);
-        text = NULL;
-        printf("Editor has been cleand!\n");
-        lines = INITIAL_SIZE; 
-        symbolsPerLine = INITIAL_SIZE;// Set the number of lines for the new editor
+        lines, symbolsPerLine = INITIAL_SIZE; 
         text = createArray(INITIAL_SIZE, INITIAL_SIZE);
         currentLine = 0;
-       
+
     }
 };
 
@@ -592,18 +581,17 @@ class Command
             "6 - search\n"
             "7 - use files to loading the information\n"
             "8 - switch line\n"
-            "9 - explain every command;\n"
+            "9 - explain every command\n"
             "10 - clear editor\n"
             "11 - clear console\n"
             "12 - delete some data\n"
-            "13 - undo\n"
-            "14 - insert with replacement\n"
-            "15 - cut\n"
-            "16 - copy\n"
-            "17 - paste\n"
-            "18 - undo\n"
-            "19 - redo\n"
-            "20 - display contents of your clipboard\n");
+            "13 - insert with replacement\n"
+            "14 - cut\n"
+            "15 - copy\n"
+            "16 - paste\n"
+            "17 - undo\n"
+            "18 - redo\n"
+            "19 - display contents of clipboard\n");
 
     }
     static void LPSArray(char pattern[], size_t patternLength, int* lps)
@@ -819,6 +807,7 @@ public:
             break;
         case 10:
             editor->Clear();
+            printf("Editor has been cleand!\n");
             stackUndo->PushToStack(editor);
             break;
         case 11:
@@ -849,11 +838,9 @@ public:
         case 18:
             Undo(editor, stackRedo, stackUndo);
             break;
-
         case 19:
             Redo(editor, stackRedo, stackUndo);
             break;
-
         case 20:
             clipboard->DisplayContentsOfClipboard();
             break;
@@ -866,15 +853,7 @@ public:
         default:
             printf("The command is not implemented. Type '9' for help.\n");
         }
-        /*if (stackUndo->size > 5)
-        {
-
-            InitializeStackForSaving(stackUndo);
-        }*/
-
-
     }
-
 };
 
 int main() {
