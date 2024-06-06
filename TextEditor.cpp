@@ -323,7 +323,26 @@ public:
         while (getchar() != '\n');
         return 1;
     }
+    void Clear() {
+        if (text == NULL)
+            exit(EXIT_FAILURE);
+        for (int i = 0; i < lines; i++)
+        {
+            free(text[i]);
+            text[i] = NULL;
+        }
+        free(text);
+        text = NULL;
+        printf("Editor has been cleand!\n");
+        lines = INITIAL_SIZE; 
+        symbolsPerLine = INITIAL_SIZE;// Set the number of lines for the new editor
+        text = createArray(INITIAL_SIZE, INITIAL_SIZE);
+        currentLine = 0;
+       
+    }
 };
+
+
 
 class NodeHistory
 {
@@ -517,8 +536,9 @@ class Command
             printf("Memory reallocation failed\n");
             exit(EXIT_FAILURE);
         }
-
-        TextEditor tempEditor;
+        
+        
+        editor->Clear(); 
         while (fgets(buffer, bufferCapacity, file) != NULL) {
             while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
                 bufferCapacity += bufferCapacity;
@@ -532,17 +552,16 @@ class Command
             }
             buffer[strcspn(buffer, "\n")] = '\0';
 
-            if (tempEditor.currentLine >= tempEditor.lines) {
-                tempEditor.MakeMoreLines(tempEditor.currentLine + 1);
+            if (editor->currentLine >= editor->lines) {
+                editor->MakeMoreLines(editor->currentLine + 1);
             }
-            tempEditor.AppendToEnd(buffer);
-            tempEditor.currentLine++;
+            editor->AppendToEnd(buffer);
+            editor->currentLine++;
         }
         free(buffer);
         fclose(file);
         printf("File has been loaded successfully!\n");
 
-        *editor = tempEditor;
     }
     static void LineToModify(TextEditor* editor)
     {
@@ -799,8 +818,7 @@ public:
             stackUndo->PushToStack(editor);
             break;
         case 10:
-            delete editor;
-            editor = new TextEditor();
+            editor->Clear();
             stackUndo->PushToStack(editor);
             break;
         case 11:
