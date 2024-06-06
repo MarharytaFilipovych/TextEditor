@@ -1,0 +1,107 @@
+struct NodeText {
+    text* textToSave;
+    NodeText* next;
+};
+
+typedef struct {
+    int size;
+    NodeText* top;
+} StackForSaving;
+
+void InitializeStackForSaving(StackForSaving* stack) {
+    stack->size = 0;
+    stack->top = NULL;
+}
+
+void PushToStack(StackForSaving* stack, text* editor) {
+    NodeText* node = (NodeText*)malloc(sizeof(NodeText));
+    if (node == NULL) {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    text* editorCopy = (text*)malloc(sizeof(text));
+    if (editorCopy == NULL) {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    *editorCopy = *editor;  
+
+    editorCopy->text = (char**)malloc(editor->lines * sizeof(char*));
+    if (editorCopy->text == NULL) {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < editor->lines; i++) {
+        editorCopy->text[i] = (char*)malloc(editor->symbolsPerLine * sizeof(char));
+        if (editorCopy->text[i] == NULL) {
+            printf("Memory allocation failed\n");
+            exit(EXIT_FAILURE);
+        }
+        strcpy(editorCopy->text[i], editor->text[i]);
+    }
+
+    node->textToSave = editorCopy;
+    node->next = stack->top;
+    stack->top = node;
+    stack->size++;
+
+}
+
+void PopFromStack(StackForSaving* stack) {
+    if (stack->top == NULL) {
+        return;
+    }
+    NodeText* temp = stack->top;
+    stack->top = stack->top->next;
+    stack->size--;
+}
+
+void FreeStack(StackForSaving* stack) {
+    NodeText* current = stack->top;
+    while (current != NULL) {
+        NodeText* next = current->next;
+        free(current);
+        current = next;
+    }
+    stack->top = NULL;
+    stack->size = 0;
+}
+
+void Undo(text* editor, StackForSaving* stackRedo, StackForSaving* stackUndo) {
+    if (stackUndo->top == NULL)
+    {
+        return;
+    }
+    PushToStack(stackRedo, editor);
+    *(editor) = *(stackUndo->top->textToSave);
+    PopFromStack(stackUndo);
+}
+
+void Redo(text* editor, StackForSaving* stackRedo, StackForSaving* stackUndo) {
+    if (stackRedo->top == NULL)
+    {
+        return;
+    }
+    PushToStack(stackUndo, editor);
+    *(editor) = *(stackRedo->top->textToSave);
+    PopFromStack(stackRedo);
+}
+
+void DisplayContentsOfStack(StackForSaving* stack) {
+    NodeText* current = stack->top;
+    if (current == NULL) {
+        printf("The stack is empty!\n");
+        return;
+    }
+    printf("Contents of the stack:\n");
+    while (current != NULL) {
+        if (current->textToSave != NULL) {
+            Print(current->textToSave);
+        }
+        else {
+            printf("Empty text\n");
+        }
+        current = current->next;
+    }
+}
