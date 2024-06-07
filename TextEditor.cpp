@@ -3,7 +3,94 @@
 #include <stdlib.h>
 #include <string.h>
 #define INITIAL_SIZE 10
+class CommandHistory
+{
+public:
+    int command;
+    int line;
+    int index;
+    int number;
+    char* text;
+    CommandHistory(int userCommand, int userLine, int userIndex, int userNumber, char* userText)
+        : command(userCommand), line(userLine), index(userIndex), number(userNumber) {
+        if (userText != NULL) {
+            text = new char[strlen(userText) + 1];
+            strcpy(text, userText);
+        }
+        else {
+            text = NULL;
+        }
+    }
 
+    void Print()
+    {
+        printf("command: %d, line: %d, index: %d, number of symbols: %d, text: %s ", command, line, index, number, text);
+    }
+
+    ~CommandHistory() {
+        delete[] text;
+    }
+};
+
+class NodeHistory
+{
+public:
+    CommandHistory commandInfo;
+    NodeHistory* next;
+
+    NodeHistory(int userCommand, int userLine, int userIndex, int userNumber, char* userText)
+        : next(NULL), commandInfo(userCommand, userLine, userIndex, userNumber, userText) {};
+
+
+};
+
+class HistoryStack
+{
+public:
+    NodeHistory* top;
+    int size;
+    HistoryStack()
+        : size(0), top(NULL) {}
+
+    void PushToStack(CommandHistory* commandInfo) {
+        NodeHistory* node = new NodeHistory(commandInfo->command, commandInfo->line, commandInfo->index, commandInfo->number, commandInfo->text);
+        node->next = top;
+        top = node;
+        size++;
+
+    }
+    void PopFromStack() {
+        if (top == NULL) {
+            return;
+        }
+        NodeHistory* temp = top;
+        top = top->next;
+        size--;
+    }
+    void DisplayContentsOfStack() {
+        NodeHistory* current = top;
+        if (current == NULL) {
+            printf("The stack is empty!\n");
+            return;
+        }
+        printf("Contents of the stack:\n");
+        while (current != NULL) {
+            current->commandInfo.Print();
+            current = current->next;
+        }
+    }
+    ~HistoryStack() {
+        NodeHistory* current = top;
+        while (current != NULL) {
+            NodeHistory* next = current->next;
+            current = next;
+            delete current;
+        }
+        top = NULL;
+        size = 0;
+    }
+
+};
 class NodeForClipboard
 {
 public:
@@ -111,14 +198,44 @@ class TextEditor
         }
         text[line] = temp;
         text[line][length] = '\0';
+        
     }
+
+    void MakeSizeOfEditorSmaller(int line) {
+        if (line < 0 || line >= lines) {
+            printf("Invalid line number\n");
+            return;
+        }
+        size_t newLinesCapacity = lines - line;
+        if (newLinesCapacity > lines) {
+            printf("Invalid newLinesCapacity calculated\n");
+            return;
+        }
+        for (size_t i = lines; i > newLinesCapacity; i--) {
+            if (text[i - 1] != NULL) {
+                free(text[i - 1]);
+                text[i - 1] = NULL;  
+            }
+        }
+        char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
+        if (temp == NULL) {
+            printf("Memory reallocation failed\n");
+            exit(EXIT_FAILURE);
+        }
+        text = temp;
+        lines = newLinesCapacity;
+    }
+
 public:
     size_t lines;
     size_t symbolsPerLine;
     char** text;
     int currentLine;
+    HistoryStack stackRedo;
+    HistoryStack stackUndo;
 
-    TextEditor() {
+
+    TextEditor()   {
         lines = INITIAL_SIZE;
         currentLine = 0;
         symbolsPerLine = INITIAL_SIZE;
@@ -173,6 +290,8 @@ public:
             MakeLineLonger(currentLength, newLength);
         }
         strcat(text[currentLine], newText);
+        CommandHistory commandInfo(1, currentLine, currentLength, newLength, newText);
+        stackUndo.PushToStack(&commandInfo);
     }
     void InsertAtIndex(int line, int place, char* newText) {
 
@@ -206,17 +325,23 @@ public:
         }
 
         text[line][currentLength + newLength] = '\0';
-
+        CommandHistory commandInfo(5, line, place, newLength, newText);
+        stackUndo.PushToStack(&commandInfo);
     }
 
     void DeleteSymbols(int line, int index, int number, int currentLength)
     {
+        char* previousText = new char[number + 1];
+        strncpy(previousText, &text[line][index], number);
+        previousText[number] = '\0';
         for (int i = index; i < currentLength; i++)
         {
             text[line][i] = text[line][i + number];
         }
         currentLength -= number;
         AdjustSizeOfLine(line, currentLength);
+        CommandHistory commandInfo(12, line, index, number, previousText);
+        stackUndo.PushToStack(&commandInfo);
     }
     void StartNewLine()
     {
@@ -227,7 +352,19 @@ public:
         }
         currentLine++;
         printf("Your new line: %d\n", currentLine);
+        CommandHistory commandInfo(2, currentLine, 0, 0, NULL);
+        stackUndo.PushToStack(&commandInfo);
 
+    }
+    void DeleteLine(int line)
+    {
+        if (currentLine == 0)
+        {
+            printf("nothing to delete!\n");
+            return;
+        }
+        MakeSizeOfEditorSmaller(line);
+        currentLine--;
     }
     void InsertWithReplacement(int line, int index, char* newText)
     {
@@ -239,10 +376,14 @@ public:
             printf("You cannot replace more symbols than present!\n");
             return;
         }
-
+        char* previousText = new char[newTextLength + 1];
+        strncpy(previousText, &text[line][index], newTextLength);
+        previousText[newTextLength] = '\0'; 
         for (int i = 0; i < newTextLength; i++) {
             text[line][index + i] = newText[i];
         }
+        CommandHistory commandInfo(14, line, index, newTextLength, previousText);
+        stackUndo.PushToStack(&commandInfo);
 
     }
     void CutOrCopy(Clipboard* clipboard, bool needCut) {
@@ -262,7 +403,12 @@ public:
         clipboard->PushToStack(textToBuffer);
         if (needCut)
         {
+            char* previousText = new char[number + 1];
+            strncpy(previousText, &text[line][index], number);
+            previousText[number] = '\0';
             DeleteSymbols(line, index, number, currentLength);
+            CommandHistory commandInfo(15, line, index, number, previousText);
+            stackUndo.PushToStack(&commandInfo);
         }
         free(textToBuffer);
     }
@@ -280,6 +426,7 @@ public:
         }
         NodeForClipboard* node = clipboard->PopFromClipboardAndReturnLastValue();
         InsertAtIndex(line, index, node->text);
+       
 
     }
     ~TextEditor()
@@ -324,104 +471,17 @@ public:
         return 1;
     }
     void Clear() {
+        char** temp = text;
         lines, symbolsPerLine = INITIAL_SIZE; 
         text = createArray(INITIAL_SIZE, INITIAL_SIZE);
         currentLine = 0;
-
+        CommandHistory commandInfo(10, 0, 0, 0, NULL);
+        stackUndo.PushToStack(&commandInfo);
+        
     }
 };
 
 
-
-class NodeHistory
-{
-public:
-    TextEditor* textToSave;
-    NodeHistory* next;
-
-    NodeHistory(TextEditor* newText)
-        : next(NULL), textToSave(newText) {};
-};
-
-class HistoryStack
-{
-public:
-    NodeHistory* top;
-    int size;
-    HistoryStack()
-        : size(0), top(NULL) {}
-
-    void PushToStack(TextEditor* editor) {
-        NodeHistory* node = (NodeHistory*)malloc(sizeof(NodeHistory));
-        if (node == NULL) {
-            printf("Memory allocation failed\n");
-            exit(EXIT_FAILURE);
-        }
-
-        TextEditor* editorCopy = (TextEditor*)malloc(sizeof(TextEditor));
-        if (editorCopy == NULL) {
-            printf("Memory allocation failed\n");
-            exit(EXIT_FAILURE);
-        }
-        *editorCopy = *editor;
-
-        editorCopy->text = (char**)malloc(editor->lines * sizeof(char*));
-        if (editorCopy->text == NULL) {
-            printf("Memory allocation failed\n");
-            exit(EXIT_FAILURE);
-        }
-        for (int i = 0; i < editor->lines; i++) {
-            editorCopy->text[i] = (char*)malloc(editor->symbolsPerLine * sizeof(char));
-            if (editorCopy->text[i] == NULL) {
-                printf("Memory allocation failed\n");
-                exit(EXIT_FAILURE);
-            }
-            strcpy(editorCopy->text[i], editor->text[i]);
-        }
-
-        node->textToSave = editorCopy;
-        node->next = top;
-        top = node;
-        size++;
-
-    }
-    void PopFromStack() {
-        if (top == NULL) {
-            return;
-        }
-        NodeHistory* temp = top;
-        top = top->next;
-        size--;
-    }
-    void DisplayContentsOfStack() {
-        NodeHistory* current = top;
-        if (current == NULL) {
-            printf("The stack is empty!\n");
-            return;
-        }
-        printf("Contents of the stack:\n");
-        while (current != NULL) {
-            if (current->textToSave != NULL) {
-                current->textToSave->Print();
-            }
-            else {
-                printf("Empty text\n");
-            }
-            current = current->next;
-        }
-    }
-    ~HistoryStack() {
-        NodeHistory* current = top;
-        while (current != NULL) {
-            NodeHistory* next = current->next;
-            free(current);
-            current = next;
-        }
-        top = NULL;
-        size = 0;
-    }
-
-};
 
 class UserInput
 {
@@ -567,8 +627,11 @@ class Command
         {
             editor->MakeMoreLines(line);
         }
+        CommandHistory commandInfo(8, editor->currentLine, 0, 0, NULL);
+        editor->stackUndo.PushToStack(&commandInfo);
         editor->currentLine = line;
         printf("Your line: %d\n", editor->currentLine);
+        
     }
     static void help()
     {
@@ -735,24 +798,63 @@ class Command
         userInput->TakeUserInput();
         editor->InsertWithReplacement(line, index, userInput->text);
     }
+    static void ChooseAbortAction(NodeHistory* node, TextEditor* editor)
+    {
+        switch (node->commandInfo.command)
+        {
+        case 1:
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]));
+            break;
+        case 2:
+            editor->DeleteLine(node->commandInfo.line);
+            break;
+        case 5:
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]));
+            break;
+        case 8:
+            editor->currentLine = node->commandInfo.line;
+            break;
+        case 12:
+            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text);
+            break;
+        case 14:
+            editor->InsertWithReplacement(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text);
+            break;
+        case 15:
+            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text);
+            break;
+        case 10:
+            printf("I can't retun your previous text!\n");
+            return;
+            break;
+        case 17:
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]));
+            break;
 
-    static void Undo(TextEditor* editor, HistoryStack* stackRedo, HistoryStack* stackUndo) {
-        if (stackUndo->size > 1) {
-            stackUndo->PopFromStack();
-            stackRedo->PushToStack(editor);
-            *editor = *(stackUndo->top->textToSave);
-
+        
+        }
+        
+        
+    }
+    static void Undo(TextEditor* editor) {
+        
+        if (editor->stackUndo.size > 0) { 
+            NodeHistory* undoNode = editor->stackUndo.top;
+            editor->stackUndo.PopFromStack();
+            editor->stackRedo.PushToStack(&undoNode->commandInfo);
+            ChooseAbortAction(undoNode, editor);
         }
         else {
             printf("Nothing more to undo.\n");
         }
     }
 
-    static void Redo(TextEditor* editor, HistoryStack* stackRedo, HistoryStack* stackUndo) {
-        if (stackRedo->size > 0) {
-            *editor = *(stackRedo->top->textToSave);
-            stackUndo->PushToStack(editor);
-            stackRedo->PopFromStack();
+    static void Redo(TextEditor* editor) {
+        if (editor->stackRedo.size > 0) {
+            NodeHistory* redoNode = editor->stackUndo.top;
+            ChooseAbortAction(redoNode, editor);
+            editor->stackRedo.PopFromStack();
+            editor->stackUndo.PushToStack(&redoNode->commandInfo);
         }
         else {
             printf("Nothing more to redo.\n");
@@ -766,7 +868,7 @@ public:
     Command(int newCommand)
         :command(newCommand) {}
 
-    static void ProcessCommand(int command, TextEditor* editor, Clipboard* clipboard, HistoryStack* stackRedo, HistoryStack* stackUndo) {
+    static void ProcessCommand(int command, TextEditor* editor, Clipboard* clipboard) {
         UserInput userInput;
         bool needCut = false;
 
@@ -779,11 +881,9 @@ public:
             break;
         case 1:
             DoCommand1(editor, &userInput);
-            stackUndo->PushToStack(editor);
             break;
         case 2:
             editor->StartNewLine();
-            stackUndo->PushToStack(editor);
             break;
         case 3:
             DoCommand3(editor, &userInput);
@@ -793,7 +893,6 @@ public:
             break;
         case 5:
             DoCommand5(editor, &userInput);
-            stackUndo->PushToStack(editor);
             break;
         case 6:
             DoCommand6(editor, &userInput);
@@ -803,52 +902,45 @@ public:
             break;
         case 8:
             LineToModify(editor);
-            stackUndo->PushToStack(editor);
             break;
-        case 10:
+        case 13:
             editor->Clear();
             printf("Editor has been cleand!\n");
-            stackUndo->PushToStack(editor);
             break;
         case 11:
             system("cls");
             break;
         case 12:
             DoCommand12(editor);
-            stackUndo->PushToStack(editor);
             break;
-        case 13:
-            break;
+        
         case 14:
             DoCommand14(editor, &userInput);
-            stackUndo->PushToStack(editor);
             break;
         case 15:
             needCut = true;
             editor->CutOrCopy(clipboard, needCut);
-            stackUndo->PushToStack(editor);
             break;
         case 16:
             editor->CutOrCopy(clipboard, needCut);
             break;
         case 17:
             editor->Paste(clipboard);
-            stackUndo->PushToStack(editor);
             break;
         case 18:
-            Undo(editor, stackRedo, stackUndo);
+            Undo(editor);
             break;
         case 19:
-            Redo(editor, stackRedo, stackUndo);
+            Redo(editor);
             break;
         case 20:
             clipboard->DisplayContentsOfClipboard();
             break;
         case 21:
-            stackRedo->DisplayContentsOfStack();
+            editor->stackRedo.DisplayContentsOfStack();
             break;
         case 22:
-            stackUndo->DisplayContentsOfStack();
+            editor->stackUndo.DisplayContentsOfStack();
             break;
         default:
             printf("The command is not implemented. Type '9' for help.\n");
@@ -858,9 +950,7 @@ public:
 
 int main() {
     printf("Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)\n");
-    Clipboard clipboard;
-    HistoryStack stackUndo;
-    HistoryStack stackRedo;
+    Clipboard clipboard;   
     TextEditor editor;
     int command;
     do {
@@ -871,7 +961,7 @@ int main() {
         }
         while (getchar() != '\n');
         Command commandUser(command);
-        commandUser.ProcessCommand(commandUser.command, &editor, &clipboard, &stackRedo, &stackUndo);
+        commandUser.ProcessCommand(commandUser.command, &editor, &clipboard);
     } while (command != 0);
     return 0;
 }
