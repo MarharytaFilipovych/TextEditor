@@ -1,9 +1,17 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #define INITIAL_SIZE 10
+#include <string.h>
 
+class Cursor
+{
+public:
+    int line;
+    int index;
+    Cursor()
+        : line(0), index(0) {}
+};
 class NodeForClipboard
 {
 public:
@@ -117,6 +125,8 @@ public:
     size_t symbolsPerLine;
     char** text;
     int currentLine;
+    Cursor cursor;
+
 
     TextEditor() {
         lines = INITIAL_SIZE;
@@ -129,9 +139,32 @@ public:
     void Print()
     {
         for (int i = 0; i < lines; i++) {
-            printf("%s\n", text[i]);
+            for (int j = 0; j <= strlen(text[i]); j++) {
+                if (i == cursor.line && j == cursor.index) {
+                    printf("*");
+                }
+                if (j < strlen(text[i])) {
+                    printf("%c",text[i][j]);
+                }
+            }
+            printf("\n");
+        }
+
+        if (cursor.line >= lines) {
+            for (int i = lines; i <= cursor.line; i++) {
+                if (i == cursor.line) {
+                    for (int j = 0; j < cursor.index; j++) {
+                        printf(" ");
+                    }
+                    printf("*\n");
+                }
+                else {
+                    printf("\n");
+                }
+            }
         }
     }
+
     void MakeLineLonger(size_t currentLength, size_t newLength)
     {
         size_t newCapacity = currentLength + newLength + 1;
@@ -173,50 +206,65 @@ public:
             MakeLineLonger(currentLength, newLength);
         }
         strcat(text[currentLine], newText);
+        MoveCursor(currentLine, currentLength + newLength);
+
     }
-    void InsertAtIndex(int line, int place, char* newText) {
+    void InsertAtIndex(char* newText) {
 
-        if (line >= lines) {
-            MakeMoreLines(line);
-            currentLine = line;
+        if (cursor.line >= lines) {
+            MakeMoreLines(cursor.line);
+            currentLine = cursor.line;
         }
-        currentLine = line;
+        currentLine = cursor.line;
 
-        size_t currentLength = strlen(text[line]);
+        size_t currentLength = strlen(text[cursor.line]);
         size_t newLength = strlen(newText);
 
         if (currentLength + newLength >= symbolsPerLine) {
-            MakeLineLonger(currentLength, newLength);
+            MakeLineLonger(currentLength, newLength + 1);
         }
 
-        if (place > currentLength) {
-            for (size_t i = currentLength; i < place; i++) {
-                text[line][i] = ' ';
+        if (cursor.index > currentLength) {
+            for (size_t i = currentLength; i < cursor.index; i++) {
+                text[cursor.line][i] = ' ';
             }
-            text[line][place] = '\0';
-            currentLength = place;
+            text[cursor.line][cursor.index] = '\0';
+            currentLength = cursor.index;
         }
 
-        for (int i = currentLength; i >= place; i--) {
-            text[line][i + newLength] = text[line][i];
+        for (int i = currentLength; i >= cursor.index; i--) {
+            text[cursor.line][i + newLength] = text[cursor.index][i];
         }
 
         for (int i = 0; i < newLength; i++) {
-            text[line][place + i] = newText[i];
+            text[cursor.line][cursor.index + i] = newText[i];
         }
 
-        text[line][currentLength + newLength] = '\0';
+        text[cursor.line][currentLength + newLength] = '\0';
+        MoveCursor(cursor.line, currentLength + newLength);
 
     }
-
-    void DeleteSymbols(int line, int index, int number, int currentLength)
+    void MoveCursor(int userLine, int userIndex)
     {
-        for (int i = index; i < currentLength; i++)
+        if (userIndex > strlen(text[userLine]))
         {
-            text[line][i] = text[line][i + number];
+            MakeLineLonger(cursor.line, currentLine);
+        }
+        cursor.line = userLine;
+        cursor.index = userIndex;
+        currentLine = cursor.line;
+
+    }
+    void DeleteSymbols(int number, int currentLength)
+    {
+        for (int i = cursor.index; i < currentLength; i++)
+        {
+            text[cursor.line][i] = text[cursor.line][i + number];
         }
         currentLength -= number;
-        AdjustSizeOfLine(line, currentLength);
+        AdjustSizeOfLine(cursor.line, currentLength + 1);
+        MoveCursor(cursor.line, currentLength);
+
     }
     void StartNewLine()
     {
@@ -227,42 +275,50 @@ public:
         }
         currentLine++;
         printf("Your new line: %d\n", currentLine);
+        MoveCursor(currentLine, 0);
 
     }
-    void InsertWithReplacement(int line, int index, char* newText)
+    void InsertWithReplacement(char* newText)
     {
-        size_t currentLength = strlen(text[line]);
+        size_t currentLength = strlen(text[cursor.line]);
         size_t newTextLength = strlen(newText);
 
-        if (index + newTextLength > currentLength)
+        if (cursor.index + newTextLength > currentLength)
         {
             printf("You cannot replace more symbols than present!\n");
             return;
         }
 
         for (int i = 0; i < newTextLength; i++) {
-            text[line][index + i] = newText[i];
+            text[cursor.line][cursor.index + i] = newText[i];
         }
-
+        MoveCursor(cursor.line, newTextLength);
     }
     void CutOrCopy(Clipboard* clipboard, bool needCut) {
-        int line, index, number;
-        size_t currentLength;
-        if (ChooseLineIndexNumber(&line, &index, &number, &currentLength)) {
+
+        int number;
+        size_t currentLength = strlen(text[currentLine]);
+        if (cursor.index == currentLength)
+        {
+            printf("Move the cursor !\n");
             return;
         }
+        if (!ChooseLineIndexNumber(&number, &currentLength)) {
+            return;
+        }
+
         char* textToBuffer = (char*)malloc((number + 1) * sizeof(char));
         if (textToBuffer == NULL) {
             printf("Memory allocation failed\n");
             exit(EXIT_FAILURE);
         }
 
-        strncpy(textToBuffer, &text[line][index], number);
+        strncpy(textToBuffer, &text[cursor.line][cursor.index], number);
         textToBuffer[number] = '\0';
         clipboard->PushToStack(textToBuffer);
         if (needCut)
         {
-            DeleteSymbols(line, index, number, currentLength);
+            DeleteSymbols(number, currentLength);
         }
         free(textToBuffer);
     }
@@ -273,13 +329,9 @@ public:
             printf("There is nothing to paste, your clipboard is empty!\n");
             return;
         }
-        int line, index;
-        size_t currentLength;
-        if (!ChooseLineIndex(&line, &index)) {
-            return;
-        }
+
         NodeForClipboard* node = clipboard->PopFromClipboardAndReturnLastValue();
-        InsertAtIndex(line, index, node->text);
+        InsertAtIndex(node->text);
 
     }
     ~TextEditor()
@@ -296,18 +348,18 @@ public:
         printf("Editor has been cleand!\n");
     }
 
-    int ChooseLineIndexNumber(int* line, int* index, int* number, size_t* currentLength)
+    int ChooseLineIndexNumber(int* number, size_t* currentLength)
     {
-        printf("Choose line, index and number of symbols:\n");
-        if (scanf("%d %d %d", line, index, number) != 3 || *line < 0 || *index < 0 || *number < 0) {
+        printf("Choose number of symbols:\n");
+        if (scanf("%d", number) != 1 || *number < 0) {
             printf("Invalid input!\n");
             while (getchar() != '\n');
             return 0;
         }
-        *currentLength = strlen(text[*line]);
+        ;
         printf("There are %d lines and, on your chosen line there are %d symbols\n", lines, *currentLength);
 
-        if (*index >= *currentLength || *number > *currentLength - *index || *currentLength == 0 || *line >= lines) {
+        if (*number > *currentLength - cursor.index || *currentLength == 0) {
             printf("Something is wrong in your numbers! Look higher!\n");
             return 0;
         }
@@ -324,7 +376,7 @@ public:
         return 1;
     }
     void Clear() {
-        lines, symbolsPerLine = INITIAL_SIZE; 
+        lines, symbolsPerLine = INITIAL_SIZE;
         text = createArray(INITIAL_SIZE, INITIAL_SIZE);
         currentLine = 0;
 
@@ -470,7 +522,7 @@ public:
         if (text != NULL)
         {
             free(text);
-            text = NULL; 
+            text = NULL;
         }
     }
     void TakeUserInput()
@@ -525,9 +577,9 @@ class Command
             printf("Memory reallocation failed\n");
             exit(EXIT_FAILURE);
         }
-        
-        
-        editor->Clear(); 
+
+
+        editor->Clear();
         while (fgets(buffer, bufferCapacity, file) != NULL) {
             while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
                 bufferCapacity += bufferCapacity;
@@ -569,6 +621,10 @@ class Command
         }
         editor->currentLine = line;
         printf("Your line: %d\n", editor->currentLine);
+        editor->cursor.line = line;
+        editor->cursor.index = 0;
+
+
     }
     static void help()
     {
@@ -591,7 +647,8 @@ class Command
             "16 - paste\n"
             "17 - undo\n"
             "18 - redo\n"
-            "19 - display contents of clipboard\n");
+            "19 - display contents of clipboard\n"
+            "22 - move the cursor\n");
 
     }
     static void LPSArray(char pattern[], size_t patternLength, int* lps)
@@ -686,13 +743,10 @@ class Command
 
     static void DoCommand5(TextEditor* editor, UserInput* userInput)
     {
-        int line, index;
-        if (!editor->ChooseLineIndex(&line, &index)) {
-            return;
-        }
+
         printf("Enter text to insert:\n");
         userInput->TakeUserInput();
-        editor->InsertAtIndex(line, index, userInput->text);
+        editor->InsertAtIndex(userInput->text);
     }
 
     static void DoCommand6(TextEditor* editor, UserInput* userInput)
@@ -709,31 +763,32 @@ class Command
     }
 
     static void DoCommand12(TextEditor* editor) {
-        int line, index, number;
-        size_t currentLength;
+        int number;
+        size_t currentLength = strlen(editor->text[editor->cursor.line]);
 
-        if (!editor->ChooseLineIndexNumber(&line, &index, &number, &currentLength)) {
+        if (!editor->ChooseLineIndexNumber(&number, &currentLength)) {
             return;
         }
 
-        editor->DeleteSymbols(line, index, number, currentLength);
+        editor->DeleteSymbols(number, currentLength);
     }
     static void DoCommand14(TextEditor* editor, UserInput* userInput)
     {
-        int line, index;
-        if (!editor->ChooseLineIndex(&line, &index))
+
+        int currentLength = strlen(editor->text[editor->cursor.line]);
+        if (currentLength == editor->cursor.index)
         {
+            printf("Move your cursor to perform this command!\n");
             return;
         }
-        int currentLength = strlen(editor->text[line]);
-        if (line > editor->lines || index > currentLength || currentLength == 0)
+        if (currentLength == 0)
         {
             printf("Something is wrong in your numbers! \n");
             return;
         }
         printf("Enter text to insert:\n");
         userInput->TakeUserInput();
-        editor->InsertWithReplacement(line, index, userInput->text);
+        editor->InsertWithReplacement(userInput->text);
     }
 
     static void Undo(TextEditor* editor, HistoryStack* stackRedo, HistoryStack* stackUndo) {
@@ -818,37 +873,51 @@ public:
             stackUndo->PushToStack(editor);
             break;
         case 13:
-            break;
-        case 14:
             DoCommand14(editor, &userInput);
             stackUndo->PushToStack(editor);
             break;
-        case 15:
+        case 14:
             needCut = true;
             editor->CutOrCopy(clipboard, needCut);
             stackUndo->PushToStack(editor);
             break;
-        case 16:
+        case 15:
             editor->CutOrCopy(clipboard, needCut);
             break;
-        case 17:
+        case 16:
             editor->Paste(clipboard);
             stackUndo->PushToStack(editor);
             break;
-        case 18:
+        case 17:
             Undo(editor, stackRedo, stackUndo);
             break;
-        case 19:
+        case 18:
             Redo(editor, stackRedo, stackUndo);
             break;
-        case 20:
+        case 19:
             clipboard->DisplayContentsOfClipboard();
             break;
-        case 21:
+        case 20:
             stackRedo->DisplayContentsOfStack();
             break;
-        case 22:
+        case 21:
             stackUndo->DisplayContentsOfStack();
+            break;
+        case 22:
+            int line, index;
+            if (!editor->ChooseLineIndex(&line, &index))
+            {
+                return;
+            }
+            if (line > editor->lines)
+            {
+                editor->MakeMoreLines(line);
+            }
+            if (index > strlen(editor->text[line]))
+            {
+                editor->MakeLineLonger(strlen(editor->text[line]), index);
+            }
+            editor->MoveCursor(line, index);
             break;
         default:
             printf("The command is not implemented. Type '9' for help.\n");
