@@ -11,8 +11,9 @@ public:
     int index;
     int number;
     char* text;
-    CommandHistory(int userCommand, int userLine, int userIndex, int userNumber, char* userText)
-        : command(userCommand), line(userLine), index(userIndex), number(userNumber) {
+    char* pText;
+    CommandHistory(int userCommand, int userLine, int userIndex, int userNumber, char* userText, char* previousText)
+        : command(userCommand), line(userLine), index(userIndex), number(userNumber), pText(NULL) {
         if (userText != NULL) {
             text = new char[strlen(userText) + 1];
             strcpy(text, userText);
@@ -20,11 +21,18 @@ public:
         else {
             text = NULL;
         }
+        if (previousText != NULL) {
+            pText = new char[strlen(previousText) + 1];
+            strcpy(pText, previousText);
+        }
+        else {
+            pText = NULL;
+        }
     }
 
     void Print()
     {
-        printf("command: %d, line: %d, index: %d, number of symbols: %d, text: %s ", command, line, index, number, text);
+        printf("command: %d, line: %d, index: %d, number of symbols: %d, text: %s, previous text: %s\n ", command, line, index, number, text, pText);
     }
 
     ~CommandHistory() {
@@ -38,8 +46,8 @@ public:
     CommandHistory commandInfo;
     NodeHistory* next;
 
-    NodeHistory(int userCommand, int userLine, int userIndex, int userNumber, char* userText)
-        : next(NULL), commandInfo(userCommand, userLine, userIndex, userNumber, userText) {};
+    NodeHistory(int userCommand, int userLine, int userIndex, int userNumber, char* userText, char* previousText)
+        : next(NULL), commandInfo(userCommand, userLine, userIndex, userNumber, userText, previousText) {};
 
 
 };
@@ -53,7 +61,7 @@ public:
         : size(0), top(NULL) {}
 
     void PushToStack(CommandHistory* commandInfo) {
-        NodeHistory* node = new NodeHistory(commandInfo->command, commandInfo->line, commandInfo->index, commandInfo->number, commandInfo->text);
+        NodeHistory* node = new NodeHistory(commandInfo->command, commandInfo->line, commandInfo->index, commandInfo->number, commandInfo->text, commandInfo->pText);
         node->next = top;
         top = node;
         size++;
@@ -198,7 +206,7 @@ class TextEditor
         }
         text[line] = temp;
         text[line][length] = '\0';
-        
+
     }
 
     void MakeSizeOfEditorSmaller(int line) {
@@ -214,7 +222,7 @@ class TextEditor
         for (size_t i = lines; i > newLinesCapacity; i--) {
             if (text[i - 1] != NULL) {
                 free(text[i - 1]);
-                text[i - 1] = NULL;  
+                text[i - 1] = NULL;
             }
         }
         char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
@@ -235,7 +243,7 @@ public:
     HistoryStack stackUndo;
 
 
-    TextEditor()   {
+    TextEditor() {
         lines = INITIAL_SIZE;
         currentLine = 0;
         symbolsPerLine = INITIAL_SIZE;
@@ -280,7 +288,7 @@ public:
         }
         lines = newLinesCapacity;
     }
-    void AppendToEnd(char newText[])
+    void AppendToEnd(char newText[], bool user)
     {
         size_t currentLength = strlen(text[currentLine]);
         size_t newLength = strlen(newText);
@@ -290,10 +298,14 @@ public:
             MakeLineLonger(currentLength, newLength);
         }
         strcat(text[currentLine], newText);
-        CommandHistory commandInfo(1, currentLine, currentLength, newLength, newText);
-        stackUndo.PushToStack(&commandInfo);
+        if (user)
+        {
+            CommandHistory commandInfo(1, currentLine, currentLength, newLength, newText, NULL);
+            stackUndo.PushToStack(&commandInfo);
+        }
+
     }
-    void InsertAtIndex(int line, int place, char* newText) {
+    void InsertAtIndex(int line, int place, char* newText, bool user) {
 
         if (line >= lines) {
             MakeMoreLines(line);
@@ -325,11 +337,15 @@ public:
         }
 
         text[line][currentLength + newLength] = '\0';
-        CommandHistory commandInfo(5, line, place, newLength, newText);
-        stackUndo.PushToStack(&commandInfo);
+        if (user)
+        {
+            CommandHistory commandInfo(5, line, place, newLength, newText, NULL);
+            stackUndo.PushToStack(&commandInfo);
+        }
+
     }
 
-    void DeleteSymbols(int line, int index, int number, int currentLength)
+    void DeleteSymbols(int line, int index, int number, int currentLength, bool user)
     {
         char* previousText = new char[number + 1];
         strncpy(previousText, &text[line][index], number);
@@ -340,10 +356,14 @@ public:
         }
         currentLength -= number;
         AdjustSizeOfLine(line, currentLength);
-        CommandHistory commandInfo(12, line, index, number, previousText);
-        stackUndo.PushToStack(&commandInfo);
+
+        if (user)
+        {
+            CommandHistory commandInfo(12, line, index, number, previousText, NULL);
+            stackUndo.PushToStack(&commandInfo);
+        }
     }
-    void StartNewLine()
+    void StartNewLine(bool user)
     {
         printf("You current line: %d. Starting new line...\n", currentLine);
         if (currentLine + 1 > lines)
@@ -352,8 +372,13 @@ public:
         }
         currentLine++;
         printf("Your new line: %d\n", currentLine);
-        CommandHistory commandInfo(2, currentLine, 0, 0, NULL);
-        stackUndo.PushToStack(&commandInfo);
+        if (user)
+        {
+            CommandHistory commandInfo(2, currentLine, 0, 0, NULL, NULL);
+            stackUndo.PushToStack(&commandInfo);
+
+        }
+
 
     }
     void DeleteLine(int line)
@@ -366,32 +391,7 @@ public:
         MakeSizeOfEditorSmaller(line);
         currentLine--;
     }
-    void InsertWithReplacement(int line, int index, char* newText)
-    {
-        size_t currentLength = strlen(text[line]);
-        size_t newTextLength = strlen(newText);
-
-        if (index + newTextLength > currentLength)
-        {
-            printf("You cannot replace more symbols than present!\n");
-            return;
-        }
-        char* previousText = new char[newTextLength + 1];
-        strncpy(previousText, &text[line][index], newTextLength);
-        previousText[newTextLength] = '\0'; 
-        for (int i = 0; i < newTextLength; i++) {
-            text[line][index + i] = newText[i];
-        }
-        CommandHistory commandInfo(14, line, index, newTextLength, previousText);
-        stackUndo.PushToStack(&commandInfo);
-
-    }
-    void CutOrCopy(Clipboard* clipboard, bool needCut) {
-        int line, index, number;
-        size_t currentLength;
-        if (ChooseLineIndexNumber(&line, &index, &number, &currentLength)) {
-            return;
-        }
+    void CutOrCopy(Clipboard* clipboard, bool needCut, bool user, int line, int number, int index, size_t currentLength) {
         char* textToBuffer = (char*)malloc((number + 1) * sizeof(char));
         if (textToBuffer == NULL) {
             printf("Memory allocation failed\n");
@@ -406,12 +406,42 @@ public:
             char* previousText = new char[number + 1];
             strncpy(previousText, &text[line][index], number);
             previousText[number] = '\0';
-            DeleteSymbols(line, index, number, currentLength);
-            CommandHistory commandInfo(15, line, index, number, previousText);
+            DeleteSymbols(line, index, number, currentLength, false);
+            if (user)
+            {
+                CommandHistory commandInfo(15, line, index, number, previousText, NULL);
+                stackUndo.PushToStack(&commandInfo);
+            }
+            delete[] previousText; 
+        }
+        free(textToBuffer); 
+    }
+
+    void InsertWithReplacement(int line, int index, char* newText, bool user)
+    {
+        size_t currentLength = strlen(text[line]);
+        size_t newTextLength = strlen(newText);
+
+        if (index + newTextLength > currentLength)
+        {
+            printf("You cannot replace more symbols than present!\n");
+            return;
+        }
+        char* previousText = new char[newTextLength + 1];
+        strncpy(previousText, &text[line][index], newTextLength);
+        previousText[newTextLength] = '\0';
+        for (int i = 0; i < newTextLength; i++) {
+            text[line][index + i] = newText[i];
+        }
+        if (user)
+        {
+            CommandHistory commandInfo(14, line, index, newTextLength, newText, previousText);
             stackUndo.PushToStack(&commandInfo);
         }
-        free(textToBuffer);
+
+
     }
+  
     void Paste(Clipboard* clipboard)
     {
         if (clipboard->top == NULL)
@@ -425,7 +455,7 @@ public:
             return;
         }
         NodeForClipboard* node = clipboard->PopFromClipboardAndReturnLastValue();
-        InsertAtIndex(line, index, node->text);
+        InsertAtIndex(line, index, node->text, true);
        
 
     }
@@ -475,8 +505,7 @@ public:
         lines, symbolsPerLine = INITIAL_SIZE; 
         text = createArray(INITIAL_SIZE, INITIAL_SIZE);
         currentLine = 0;
-        CommandHistory commandInfo(10, 0, 0, 0, NULL);
-        stackUndo.PushToStack(&commandInfo);
+       
         
     }
 };
@@ -604,7 +633,7 @@ class Command
             if (editor->currentLine >= editor->lines) {
                 editor->MakeMoreLines(editor->currentLine + 1);
             }
-            editor->AppendToEnd(buffer);
+            editor->AppendToEnd(buffer, false);
             editor->currentLine++;
         }
         free(buffer);
@@ -627,7 +656,7 @@ class Command
         {
             editor->MakeMoreLines(line);
         }
-        CommandHistory commandInfo(8, editor->currentLine, 0, 0, NULL);
+        CommandHistory commandInfo(8, editor->currentLine, 0, 0, NULL, NULL);
         editor->stackUndo.PushToStack(&commandInfo);
         editor->currentLine = line;
         printf("Your line: %d\n", editor->currentLine);
@@ -735,7 +764,7 @@ class Command
     {
         printf("Enter text to append:\n");
         userInput->TakeUserInput();
-        editor->AppendToEnd(userInput->text);
+        editor->AppendToEnd(userInput->text, true);
     }
 
     static void DoCommand3(TextEditor* editor, UserInput* userInput)
@@ -755,7 +784,7 @@ class Command
         }
         printf("Enter text to insert:\n");
         userInput->TakeUserInput();
-        editor->InsertAtIndex(line, index, userInput->text);
+        editor->InsertAtIndex(line, index, userInput->text, true);
     }
 
     static void DoCommand6(TextEditor* editor, UserInput* userInput)
@@ -779,8 +808,19 @@ class Command
             return;
         }
 
-        editor->DeleteSymbols(line, index, number, currentLength);
+        editor->DeleteSymbols(line, index, number, currentLength, true);
     }
+    static void DoCommand15or16(TextEditor* editor, Clipboard* clipboard, bool needCut)
+
+    {
+        int line, index, number;
+        size_t currentLength;
+        if (!editor->ChooseLineIndexNumber(&line, &index, &number, &currentLength)) {
+            return;
+        }
+        editor->CutOrCopy(clipboard, needCut, true, line, number, index, currentLength);
+    }
+
     static void DoCommand14(TextEditor* editor, UserInput* userInput)
     {
         int line, index;
@@ -796,49 +836,91 @@ class Command
         }
         printf("Enter text to insert:\n");
         userInput->TakeUserInput();
-        editor->InsertWithReplacement(line, index, userInput->text);
+        editor->InsertWithReplacement(line, index, userInput->text, true);
     }
     static void ChooseAbortAction(NodeHistory* node, TextEditor* editor)
     {
         switch (node->commandInfo.command)
         {
         case 1:
-            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]));
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
         case 2:
             editor->DeleteLine(node->commandInfo.line);
             break;
         case 5:
-            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]));
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
         case 8:
             editor->currentLine = node->commandInfo.line;
             break;
         case 12:
-            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text);
+            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
         case 14:
-            editor->InsertWithReplacement(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text);
+            editor->InsertWithReplacement(node->commandInfo.line, node->commandInfo.index, node->commandInfo.pText, false);
             break;
         case 15:
-            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text);
+            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
         case 10:
             printf("I can't retun your previous text!\n");
             return;
             break;
         case 17:
-            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]));
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
+        default:
+            printf("I can't retun your previous text!\n");
+            return;
 
         
         }
         
         
     }
+    static void ChooseAbortActionForRedo(NodeHistory* node, TextEditor* editor, Clipboard* clipboard)
+    {
+        switch (node->commandInfo.command)
+        {
+        case 1:
+            editor->AppendToEnd(node->commandInfo.text, false);
+            break;
+        case 2:
+            editor->StartNewLine(false);
+            break;
+        case 5:
+            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
+            break;
+        case 8:
+            editor->currentLine = node->commandInfo.line;
+            break;
+        case 12:
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, node->commandInfo.number, strlen(editor->text[node->commandInfo.line]), false);
+            break;
+        case 14:
+            editor->InsertWithReplacement(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
+            break;
+        case 15:
+            editor->CutOrCopy(clipboard,true, false, node->commandInfo.line, node->commandInfo.number, node->commandInfo.index, strlen(editor->text[node->commandInfo.line]));
+            break;
+        case 10:
+            printf("I can't retun your previous text!\n");
+            return;
+            break;
+        case 17:
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
+            break;
+        default:
+            printf("I can't retun your previous text!\n");
+            return;
+
+
+        }
+    }
+
     static void Undo(TextEditor* editor) {
-        
-        if (editor->stackUndo.size > 0) { 
+        if (editor->stackUndo.size > 0) {
             NodeHistory* undoNode = editor->stackUndo.top;
             editor->stackUndo.PopFromStack();
             editor->stackRedo.PushToStack(&undoNode->commandInfo);
@@ -849,12 +931,13 @@ class Command
         }
     }
 
-    static void Redo(TextEditor* editor) {
+    static void Redo(TextEditor* editor, Clipboard* clipboard) {
         if (editor->stackRedo.size > 0) {
-            NodeHistory* redoNode = editor->stackUndo.top;
-            ChooseAbortAction(redoNode, editor);
+            NodeHistory* redoNode = editor->stackRedo.top;
             editor->stackRedo.PopFromStack();
+           ChooseAbortActionForRedo(redoNode, editor, clipboard); 
             editor->stackUndo.PushToStack(&redoNode->commandInfo);
+            delete redoNode;
         }
         else {
             printf("Nothing more to redo.\n");
@@ -883,7 +966,7 @@ public:
             DoCommand1(editor, &userInput);
             break;
         case 2:
-            editor->StartNewLine();
+            editor->StartNewLine(true);
             break;
         case 3:
             DoCommand3(editor, &userInput);
@@ -919,10 +1002,10 @@ public:
             break;
         case 15:
             needCut = true;
-            editor->CutOrCopy(clipboard, needCut);
+            DoCommand15or16(editor, clipboard, needCut);
             break;
         case 16:
-            editor->CutOrCopy(clipboard, needCut);
+            DoCommand15or16(editor, clipboard, needCut);
             break;
         case 17:
             editor->Paste(clipboard);
@@ -931,7 +1014,7 @@ public:
             Undo(editor);
             break;
         case 19:
-            Redo(editor);
+            Redo(editor, clipboard);
             break;
         case 20:
             clipboard->DisplayContentsOfClipboard();
