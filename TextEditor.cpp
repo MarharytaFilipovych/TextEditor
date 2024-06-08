@@ -144,7 +144,10 @@ public:
                     printf("*");
                 }
                 if (j < strlen(text[i])) {
-                    printf("%c",text[i][j]);
+                    printf("%c", text[i][j]);
+                }
+                else {
+                    printf(" "); // Add empty space if the cursor is at the end of the line
                 }
             }
             printf("\n");
@@ -164,6 +167,7 @@ public:
             }
         }
     }
+
 
     void MakeLineLonger(size_t currentLength, size_t newLength)
     {
@@ -244,17 +248,32 @@ public:
         MoveCursor(cursor.line, currentLength + newLength);
 
     }
+    
     void MoveCursor(int userLine, int userIndex)
     {
+        if (userLine >= lines)
+        {
+            MakeMoreLines(userLine);
+        }
+
+        cursor.line = userLine;
+
         if (userIndex > strlen(text[userLine]))
         {
-            MakeLineLonger(cursor.line, currentLine);
+            MakeLineLonger(userLine, userIndex);
+
+            for (int i = strlen(text[userLine]); i < userIndex; i++)
+            {
+                text[userLine][i] = ' ';
+            }
+            text[userLine][userIndex] = '\0';  
         }
-        cursor.line = userLine;
+
         cursor.index = userIndex;
         currentLine = cursor.line;
-
     }
+
+
     void DeleteSymbols(int number, int currentLength)
     {
         for (int i = cursor.index; i < currentLength; i++)
