@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <iostream>
 #define INITIAL_SIZE 10
+
 class CommandHistory
 {
 public:
@@ -12,7 +14,7 @@ public:
     int number;
     char* text;
     char* pText;
-    CommandHistory(int userCommand, int userLine, int userIndex, int userNumber, char* userText, char* previousText)
+    CommandHistory(int userCommand, int userLine, int userIndex, size_t userNumber, char* userText, char* previousText)
         : command(userCommand), line(userLine), index(userIndex), number(userNumber), pText(NULL) {
         if (userText != NULL) {
             text = new char[strlen(userText) + 1];
@@ -29,14 +31,18 @@ public:
             pText = NULL;
         }
     }
-
     void Print()
     {
-        printf("command: %d, line: %d, index: %d, number of symbols: %d, text: %s, previous text: %s\n ", command, line, index, number, text, pText);
+        std::cout << "command: " << command
+            << ", line: " << line
+            << ", index: " << index
+            << ", number of symbols: " << number
+            << ", new text: " << (text ? text : "-")
+            << ", previous text: " << (pText ? pText : "-") << std::endl;
     }
-
     ~CommandHistory() {
         delete[] text;
+        delete[] pText;
     }
 };
 
@@ -46,9 +52,8 @@ public:
     CommandHistory commandInfo;
     NodeHistory* next;
 
-    NodeHistory(int userCommand, int userLine, int userIndex, int userNumber, char* userText, char* previousText)
+    NodeHistory(int userCommand, int userLine, int userIndex, size_t userNumber, char* userText, char* previousText)
         : next(NULL), commandInfo(userCommand, userLine, userIndex, userNumber, userText, previousText) {};
-
 
 };
 
@@ -56,7 +61,7 @@ class HistoryStack
 {
 public:
     NodeHistory* top;
-    int size;
+    size_t size;
     HistoryStack()
         : size(0), top(NULL) {}
 
@@ -74,14 +79,15 @@ public:
         NodeHistory* temp = top;
         top = top->next;
         size--;
+        delete temp; // ?
     }
     void DisplayContentsOfStack() {
         NodeHistory* current = top;
         if (current == NULL) {
-            printf("The stack is empty!\n");
+            std::cout << "The stack is empty!" << std::endl;
             return;
         }
-        printf("Contents of the stack:\n");
+        std::cout << "Contents of the stack:" << std::endl;
         while (current != NULL) {
             current->commandInfo.Print();
             current = current->next;
@@ -91,8 +97,9 @@ public:
         NodeHistory* current = top;
         while (current != NULL) {
             NodeHistory* next = current->next;
-            current = next;
             delete current;
+            current = next;
+
         }
         top = NULL;
         size = 0;
@@ -104,6 +111,7 @@ class NodeForClipboard
 public:
     char* text;
     NodeForClipboard* next;
+    NodeForClipboard() : text(NULL), next(NULL) {}
 
     NodeForClipboard(char* newText)
         : text(newText), next(NULL) {}
@@ -112,7 +120,7 @@ public:
 
 class Clipboard
 {
-    int size;
+    size_t size;
 public:
     NodeForClipboard* top;
     Clipboard()
@@ -124,13 +132,13 @@ public:
         current = top;
         if (current == NULL)
         {
-            printf("Your clipboard is empty!\n");
+            std::cout << "Your clipboard is empty!" << std::endl;
             return;
         }
-        printf("Contents of your clipboard:\n");
+        std::cout << "Contents of your clipboard:" << std::endl;
         while (current != NULL)
         {
-            printf("%s\n", current->text);
+            std::cout << current->text << std::endl;
             current = current->next;
         }
 
@@ -141,20 +149,19 @@ public:
         while (current != NULL)
         {
             NodeForClipboard* next = current->next;
-            free(current->text);
-            free(current);
+            delete[] current->text;
+            delete current;
             current = next;
         }
         top = NULL;
     }
     void PushToStack(char* text) {
-        NodeForClipboard* node = (NodeForClipboard*)malloc(sizeof(NodeForClipboard));
+        NodeForClipboard* node = new NodeForClipboard;
         if (node == NULL) {
-            printf("Memory allocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         node->text = _strdup(text);
-
         node->next = top;
         top = node;
         size++;
@@ -175,22 +182,21 @@ public:
 
 class TextEditor
 {
-
     char** createArray(int rows, int columns)
     {
-        char** array = (char**)malloc(rows * sizeof(char*));
+        char** array = new char*[rows];
         if (array == NULL)
         {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
 
         for (int i = 0; i < rows; i++)
         {
-            array[i] = (char*)malloc(columns * sizeof(char));
+            array[i] = new char[columns];
             if (array[i] == NULL)
             {
-                printf("Memory reallocation failed\n");
+                std::cerr << "Memory allocation failed" << std::endl;
                 exit(EXIT_FAILURE);
             }
             array[i][0] = '\0';
@@ -201,7 +207,7 @@ class TextEditor
     void AdjustSizeOfLine(int line, int length) {
         char* temp = (char*)realloc(text[line], (length + 1) * sizeof(char));
         if (temp == NULL) {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text[line] = temp;
@@ -227,13 +233,19 @@ class TextEditor
         }
         char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
         if (temp == NULL) {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text = temp;
         lines = newLinesCapacity;
     }
-
+    char* SavePreviousText(int line, int index, size_t number)
+    {
+        char* previousText = new char[number + 1];
+        strncpy(previousText, &text[line][index], number);
+        previousText[number] = '\0';
+        return previousText;
+    }
 public:
     size_t lines;
     size_t symbolsPerLine;
@@ -242,13 +254,11 @@ public:
     HistoryStack stackRedo;
     HistoryStack stackUndo;
 
-
     TextEditor() {
         lines = INITIAL_SIZE;
         currentLine = 0;
         symbolsPerLine = INITIAL_SIZE;
         text = createArray(INITIAL_SIZE, INITIAL_SIZE);
-
     }
 
     void Print()
@@ -262,7 +272,7 @@ public:
         size_t newCapacity = currentLength + newLength + 1;
         char* temp = (char*)realloc(text[currentLine], newCapacity * sizeof(char));
         if (temp == NULL) {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text[currentLine] = temp;
@@ -273,7 +283,7 @@ public:
         char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
         if (temp == NULL)
         {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text = temp;
@@ -281,7 +291,7 @@ public:
             text[i] = (char*)malloc(symbolsPerLine * sizeof(char));
             if (text[i] == NULL)
             {
-                printf("Memory reallocation failed\n");
+                std::cerr << "Memory allocation failed" << std::endl;
                 exit(EXIT_FAILURE);
             }
             text[i][0] = '\0';
@@ -303,7 +313,6 @@ public:
             CommandHistory commandInfo(1, currentLine, currentLength, newLength, newText, NULL);
             stackUndo.PushToStack(&commandInfo);
         }
-
     }
     void InsertAtIndex(int line, int place, char* newText, bool user) {
 
@@ -342,14 +351,11 @@ public:
             CommandHistory commandInfo(5, line, place, newLength, newText, NULL);
             stackUndo.PushToStack(&commandInfo);
         }
-
     }
 
-    void DeleteSymbols(int line, int index, int number, int currentLength, bool user)
+    void DeleteSymbols(int line, int index, size_t number, int currentLength, bool user)
     {
-        char* previousText = new char[number + 1];
-        strncpy(previousText, &text[line][index], number);
-        previousText[number] = '\0';
+        char* previousText = SavePreviousText(line, index, number);
         for (int i = index; i < currentLength; i++)
         {
             text[line][i] = text[line][i + number];
@@ -376,10 +382,7 @@ public:
         {
             CommandHistory commandInfo(2, currentLine, 0, 0, NULL, NULL);
             stackUndo.PushToStack(&commandInfo);
-
         }
-
-
     }
     void DeleteLine(int line)
     {
@@ -391,30 +394,21 @@ public:
         MakeSizeOfEditorSmaller(line);
         currentLine--;
     }
-    void CutOrCopy(Clipboard* clipboard, bool needCut, bool user, int line, int number, int index, size_t currentLength) {
-        char* textToBuffer = (char*)malloc((number + 1) * sizeof(char));
-        if (textToBuffer == NULL) {
-            printf("Memory allocation failed\n");
-            exit(EXIT_FAILURE);
-        }
-
-        strncpy(textToBuffer, &text[line][index], number);
-        textToBuffer[number] = '\0';
+    void CutOrCopy(Clipboard* clipboard, bool needCut, bool user, int line, int number, int index, size_t currentLength) 
+    {       
+        char* textToBuffer = SavePreviousText(line, index, number);      
         clipboard->PushToStack(textToBuffer);
+
         if (needCut)
         {
-            char* previousText = new char[number + 1];
-            strncpy(previousText, &text[line][index], number);
-            previousText[number] = '\0';
             DeleteSymbols(line, index, number, currentLength, false);
             if (user)
             {
-                CommandHistory commandInfo(15, line, index, number, previousText, NULL);
+                CommandHistory commandInfo(15, line, index, number, textToBuffer, NULL);
                 stackUndo.PushToStack(&commandInfo);
             }
-            delete[] previousText; 
         }
-        free(textToBuffer); 
+        delete[] textToBuffer;
     }
 
     void InsertWithReplacement(int line, int index, char* newText, bool user)
@@ -427,9 +421,7 @@ public:
             printf("You cannot replace more symbols than present!\n");
             return;
         }
-        char* previousText = new char[newTextLength + 1];
-        strncpy(previousText, &text[line][index], newTextLength);
-        previousText[newTextLength] = '\0';
+        char* previousText = SavePreviousText(line, index, newTextLength);       
         for (int i = 0; i < newTextLength; i++) {
             text[line][index + i] = newText[i];
         }
@@ -438,8 +430,6 @@ public:
             CommandHistory commandInfo(14, line, index, newTextLength, newText, previousText);
             stackUndo.PushToStack(&commandInfo);
         }
-
-
     }
   
     void Paste(Clipboard* clipboard)
@@ -457,7 +447,6 @@ public:
         NodeForClipboard* node = clipboard->PopFromClipboardAndReturnLastValue();
         InsertAtIndex(line, index, node->text, true);
        
-
     }
     ~TextEditor()
     {
@@ -482,18 +471,19 @@ public:
             return 0;
         }
         *currentLength = strlen(text[*line]);
-        printf("There are %d lines and, on your chosen line there are %d symbols\n", lines, *currentLength);
+        std::cout << "There are " << lines << " lines and, on your chosen line there are " << *currentLength << " symbols" << std::endl;
 
         if (*index >= *currentLength || *number > *currentLength - *index || *currentLength == 0 || *line >= lines) {
-            printf("Something is wrong in your numbers! Look higher!\n");
+            std::cout << "Something is wrong in your numbers! Look higher!" << std::endl;
             return 0;
         }
         return 1;
     }
     int ChooseLineIndex(int* line, int* index) {
-        printf("Choose line and index:\n");
+        std::cout << "Choose line and index:" << std::endl;
         if (scanf("%d %d", line, index) != 2 || *line < 0 || *index < 0) {
-            printf("Invalid input\n");
+            std::cout << "Invalid input" << std::endl;
+
             while (getchar() != '\n');
             return 0;
         }
@@ -501,16 +491,11 @@ public:
         return 1;
     }
     void Clear() {
-        char** temp = text;
         lines, symbolsPerLine = INITIAL_SIZE; 
         text = createArray(INITIAL_SIZE, INITIAL_SIZE);
-        currentLine = 0;
-       
-        
+        currentLine = 0;       
     }
 };
-
-
 
 class UserInput
 {
@@ -519,7 +504,7 @@ class UserInput
         char* temp = (char*)realloc(text, newCapacity * sizeof(char));
         if (temp == NULL)
         {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text = temp;
@@ -530,7 +515,7 @@ class UserInput
         char* temp = (char*)realloc(text, (realLength + 1) * sizeof(char));
         if (temp == NULL)
         {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text = temp;
@@ -540,10 +525,10 @@ public:
     char* text;
     size_t capacity;
     char* CreateArrayForUserInput() {
-        char* text = (char*)malloc(INITIAL_SIZE * sizeof(char));
+        char* text = new char[INITIAL_SIZE];
         if (text == NULL)
         {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text[0] = '\0';
@@ -558,7 +543,7 @@ public:
     {
         if (text != NULL)
         {
-            free(text);
+           delete[] text;
             text = NULL; 
         }
     }
@@ -577,8 +562,6 @@ public:
         text[strcspn(text, "\n")] = '\0';
         AdjustNeededSizeForUserArray(currentLength);
     }
-
-
 };
 
 class Command
@@ -589,7 +572,7 @@ class Command
         file = fopen(fileName, "w");
         if (file == NULL)
         {
-            ("This file cannot be opened or something bad happened to it!\n");
+            std::cout << "This file cannot be opened or something bad happened to it!" << std::endl;
             return;
         }
         for (int i = 0; i < editor->lines; i++)
@@ -598,20 +581,20 @@ class Command
             fputc('\n', file);
         }
         fclose(file);
-        printf("Text has been saved successfully!\n");
+        std::cout << "Text has been saved successfully!" << std::endl;
 
     }
     static void LoadFromFile(TextEditor* editor, char fileName[]) {
         FILE* file = fopen(fileName, "r");
         if (file == NULL) {
-            printf("Error opening file. It looks like it does not exist!\n");
+            std::cout << "Error opening file. It looks like it does not exist!" << std::endl;
             return;
         }
 
         size_t bufferCapacity = INITIAL_SIZE;
-        char* buffer = (char*)malloc(bufferCapacity * sizeof(char));
+        char* buffer = (char*)malloc(sizeof(char)* INITIAL_SIZE);
         if (buffer == NULL) {
-            printf("Memory reallocation failed\n");
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         
@@ -622,7 +605,7 @@ class Command
                 bufferCapacity += bufferCapacity;
                 char* temp = (char*)realloc(buffer, bufferCapacity * sizeof(char));
                 if (temp == NULL) {
-                    printf("Memory reallocation failed\n");
+                    std::cerr << "Memory allocation failed" << std::endl;
                     exit(EXIT_FAILURE);
                 }
                 buffer = temp;
@@ -638,15 +621,15 @@ class Command
         }
         free(buffer);
         fclose(file);
-        printf("File has been loaded successfully!\n");
+        std::cout << "File has been loaded successfully!" << std::endl;
 
     }
     static void LineToModify(TextEditor* editor)
     {
         int line;
-        printf("Your cuurent line is: %d. Enter a line which you want to modify:\n", editor->currentLine);
+        std::cout << "Your current line is: " << editor->currentLine << ". Enter a line you want to modify:" << std::endl;
         if (scanf("%d", &line) != 1) {
-            printf("Invalid input\n");
+            std::cout << "Invalid input" << std::endl;
             while (getchar() != '\n');
             return;
         };
@@ -659,15 +642,16 @@ class Command
         CommandHistory commandInfo(8, editor->currentLine, 0, 0, NULL, NULL);
         editor->stackUndo.PushToStack(&commandInfo);
         editor->currentLine = line;
-        printf("Your line: %d\n", editor->currentLine);
-        
+        std::cout << "Your line: " << editor->currentLine << std::endl;
+
     }
     static void help()
     {
-        printf("There is an explanation for every command:\n"
+        std::cout << "There is an explanation for every command:\n"
+            "0 - exit\n"
             "1 - append text symbols to the end\n"
             "2 - start the new line\n"
-            "3 - use files to saving the information\n"
+            "3 - use files to save the information\n"
             "4 - print the current text to console\n"
             "5 - insert the text by line and symbol index\n"
             "6 - search\n"
@@ -683,7 +667,8 @@ class Command
             "16 - paste\n"
             "17 - undo\n"
             "18 - redo\n"
-            "19 - display contents of clipboard\n");
+            "20/21 - display history of text improvement\n";
+
 
     }
     static void LPSArray(char pattern[], size_t patternLength, int* lps)
@@ -716,9 +701,9 @@ class Command
     {
         size_t M = strlen(pattern);
         if (M == 0) return;
-        int* lps = (int*)malloc(M * sizeof(int));
+        int* lps = new int[M];
         if (lps == NULL) {
-            perror("Failed to allocate memory for LPS array");
+            std::cerr << "Memory allocation failed" << std::endl;
             return;
         }    LPSArray(pattern, M, lps);
 
@@ -737,7 +722,7 @@ class Command
                 }
                 if (j == M)
                 {
-                    printf("Your pattern is found at location (line, place): %d %d\n", k, i - j);
+                    std::cout << "Your pattern is found at location (line, place): " << k << " " << i - j << std::endl;
                     foundPattern = true;
                     j = lps[j - 1];
                 }
@@ -756,13 +741,13 @@ class Command
         }
         if (!foundPattern)
         {
-            printf("No pattern like yours can be found!\n");
+            std::cout << "No pattern like yours can be found!" << std::endl;
         }
-        free(lps);
+        delete[] lps;
     }
     static void DoCommand1(TextEditor* editor, UserInput* userInput)
     {
-        printf("Enter text to append:\n");
+        std::cout << "Enter text to append:" << std::endl;
         userInput->TakeUserInput();
         editor->AppendToEnd(userInput->text, true);
     }
@@ -770,7 +755,7 @@ class Command
     static void DoCommand3(TextEditor* editor, UserInput* userInput)
     {
         do {
-            printf("Enter a filename in which you want to store the text:\n");
+            std::cout << "Enter a filename in which you want to store the text:" << std::endl;
             userInput->TakeUserInput();
         } while (strlen(userInput->text) == 0);
         SaveToFile(editor, userInput->text);
@@ -782,20 +767,20 @@ class Command
         if (!editor->ChooseLineIndex(&line, &index)) {
             return;
         }
-        printf("Enter text to insert:\n");
+        std::cout << "Enter text to insert:" << std::endl;
         userInput->TakeUserInput();
         editor->InsertAtIndex(line, index, userInput->text, true);
     }
 
     static void DoCommand6(TextEditor* editor, UserInput* userInput)
     {
-        printf("Enter a pattern:\n");
+        std::cout << "Enter a pattern:" << std::endl;
         userInput->TakeUserInput();
         KMPSearch(editor, userInput->text);
     }
     static void DoCommand7(TextEditor* editor, UserInput* userInput)
     {
-        printf("Enter a filename from which you want to load data into the text editor:\n");
+        std::cout << "Enter a filename from which you want to load data into the text editor:" << std::endl;
         userInput->TakeUserInput();
         LoadFromFile(editor, userInput->text);
     }
@@ -810,7 +795,7 @@ class Command
 
         editor->DeleteSymbols(line, index, number, currentLength, true);
     }
-    static void DoCommand15or16(TextEditor* editor, Clipboard* clipboard, bool needCut)
+    static void DoCommand14or15(TextEditor* editor, Clipboard* clipboard, bool needCut)
 
     {
         int line, index, number;
@@ -821,24 +806,24 @@ class Command
         editor->CutOrCopy(clipboard, needCut, true, line, number, index, currentLength);
     }
 
-    static void DoCommand14(TextEditor* editor, UserInput* userInput)
+    static void DoCommand13(TextEditor* editor, UserInput* userInput)
     {
         int line, index;
         if (!editor->ChooseLineIndex(&line, &index))
         {
             return;
         }
-        int currentLength = strlen(editor->text[line]);
+        size_t currentLength = strlen(editor->text[line]);
         if (line > editor->lines || index > currentLength || currentLength == 0)
         {
-            printf("Something is wrong in your numbers! \n");
+            std::cout << "Something is wrong in your numbers!" << std::endl;
             return;
         }
-        printf("Enter text to insert:\n");
+        std::cout << "Enter text to insert:" << std::endl;
         userInput->TakeUserInput();
         editor->InsertWithReplacement(line, index, userInput->text, true);
     }
-    static void ChooseAbortAction(NodeHistory* node, TextEditor* editor)
+    static void ChooseAbortActionForUndo(NodeHistory* node, TextEditor* editor)
     {
         switch (node->commandInfo.command)
         {
@@ -857,24 +842,18 @@ class Command
         case 12:
             editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
-        case 14:
+        case 13:
             editor->InsertWithReplacement(node->commandInfo.line, node->commandInfo.index, node->commandInfo.pText, false);
             break;
-        case 15:
+        case 14:
             editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
-        case 10:
-            printf("I can't retun your previous text!\n");
-            return;
-            break;
-        case 17:
+        case 16:
             editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
         default:
-            printf("I can't retun your previous text!\n");
+            std::cout << "I can't return your previous text!" << std::endl;
             return;
-
-        
         }
         
         
@@ -898,24 +877,18 @@ class Command
         case 12:
             editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, node->commandInfo.number, strlen(editor->text[node->commandInfo.line]), false);
             break;
-        case 14:
+        case 13:
             editor->InsertWithReplacement(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
-        case 15:
+        case 14:
             editor->CutOrCopy(clipboard,true, false, node->commandInfo.line, node->commandInfo.number, node->commandInfo.index, strlen(editor->text[node->commandInfo.line]));
             break;
-        case 10:
-            printf("I can't retun your previous text!\n");
-            return;
-            break;
-        case 17:
+        case 16:
             editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
         default:
-            printf("I can't retun your previous text!\n");
+            std::cout << "I can't return your previous text!" << std::endl;
             return;
-
-
         }
     }
 
@@ -924,10 +897,12 @@ class Command
             NodeHistory* undoNode = editor->stackUndo.top;
             editor->stackUndo.PopFromStack();
             editor->stackRedo.PushToStack(&undoNode->commandInfo);
-            ChooseAbortAction(undoNode, editor);
+            ChooseAbortActionForUndo(undoNode, editor);
         }
         else {
-            printf("Nothing more to undo.\n");
+            std::cout << "Nothing more to undo." << std::endl;
+
+          
         }
     }
 
@@ -940,7 +915,7 @@ class Command
             delete redoNode;
         }
         else {
-            printf("Nothing more to redo.\n");
+            std::cout << "Nothing more to undo." << std::endl;
         }
     }
 
@@ -956,11 +931,9 @@ public:
         bool needCut = false;
 
         switch (command) {
-        case 9:
-            help();
-            break;
+        
         case 0:
-            printf("Exiting text editor. Bye!\n");
+            std::cout << "Exiting text editor. Bye!" << std::endl;
             break;
         case 1:
             DoCommand1(editor, &userInput);
@@ -986,58 +959,60 @@ public:
         case 8:
             LineToModify(editor);
             break;
-        case 13:
+        case 9:
+            help();
+            break;
+        case 10:
             editor->Clear();
-            printf("Editor has been cleand!\n");
+            std::cout << "Editor has been cleand!" << std::endl;
             break;
         case 11:
             system("cls");
             break;
         case 12:
             DoCommand12(editor);
+            break;        
+        case 13:
+            DoCommand13(editor, &userInput);
             break;
-        
         case 14:
-            DoCommand14(editor, &userInput);
+            needCut = true;
+            DoCommand14or15(editor, clipboard, needCut);
             break;
         case 15:
-            needCut = true;
-            DoCommand15or16(editor, clipboard, needCut);
+            DoCommand14or15(editor, clipboard, needCut);
             break;
         case 16:
-            DoCommand15or16(editor, clipboard, needCut);
-            break;
-        case 17:
             editor->Paste(clipboard);
             break;
-        case 18:
+        case 17:
             Undo(editor);
             break;
-        case 19:
+        case 18:
             Redo(editor, clipboard);
             break;
-        case 20:
+        case 19:
             clipboard->DisplayContentsOfClipboard();
             break;
-        case 21:
+        case 20:
             editor->stackRedo.DisplayContentsOfStack();
             break;
-        case 22:
+        case 21:
             editor->stackUndo.DisplayContentsOfStack();
             break;
         default:
-            printf("The command is not implemented. Type '9' for help.\n");
+            std::cout << "The command is not implemented. Type '9' for help." << std::endl;
         }
     }
 };
 
 int main() {
-    printf("Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)\n");
+    std::cout << "Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)" << std::endl;
     Clipboard clipboard;   
     TextEditor editor;
     int command;
     do {
-        printf("Enter command: ");
+        std::cout << "Enter command: " ;
         if (scanf("%d", &command) != 1) {
             while (getchar() != '\n');
             continue;
