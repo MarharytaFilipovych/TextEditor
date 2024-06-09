@@ -4,7 +4,8 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#define INITIAL_SIZE 10
+#define INITIAL_SIZE_OF_ROW 100
+#define INITIAL_SIZE_OF_LINES 20
 
 class CommandHistory
 {
@@ -256,10 +257,10 @@ public:
     HistoryStack stackUndo;
 
     TextEditor() {
-        lines = INITIAL_SIZE;
+        lines = INITIAL_SIZE_OF_ROW;
         currentLine = 0;
-        symbolsPerLine = INITIAL_SIZE;
-        text = createArray(INITIAL_SIZE, INITIAL_SIZE);
+        symbolsPerLine = INITIAL_SIZE_OF_ROW;
+        text = createArray(INITIAL_SIZE_OF_LINES, INITIAL_SIZE_OF_ROW);
     }
 
     void Print()
@@ -493,9 +494,9 @@ public:
         return 1;
     }
     void Clear() {
-        
-        lines = symbolsPerLine = INITIAL_SIZE;
-        text = createArray(INITIAL_SIZE, INITIAL_SIZE);
+        lines = INITIAL_SIZE_OF_LINES;
+        symbolsPerLine = INITIAL_SIZE_OF_ROW;
+        text = createArray(INITIAL_SIZE_OF_LINES, INITIAL_SIZE_OF_ROW);
         currentLine = 0;
     }
 };
@@ -528,7 +529,7 @@ public:
     char* text;
     size_t capacity;
     char* CreateArrayForUserInput() {
-        char* text = new char[INITIAL_SIZE];
+        char* text = new char[INITIAL_SIZE_OF_ROW];
         if (text == nullptr)
         {
             std::cerr << "Memory allocation failed" << std::endl;
@@ -540,7 +541,7 @@ public:
     UserInput()
     {
         text = CreateArrayForUserInput();
-        capacity = INITIAL_SIZE;
+        capacity = INITIAL_SIZE_OF_ROW;
     }
     ~UserInput()
     {
@@ -588,8 +589,8 @@ class Command
             return;
         }
 
-        size_t bufferCapacity = INITIAL_SIZE;
-        char* buffer = new char[INITIAL_SIZE];
+        size_t bufferCapacity = INITIAL_SIZE_OF_ROW;
+        char* buffer = new char[INITIAL_SIZE_OF_ROW];
         if (buffer == NULL) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
