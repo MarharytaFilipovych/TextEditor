@@ -80,7 +80,7 @@ public:
         NodeHistory* temp = top;
         top = top->next;
         size--;
-        delete temp; // ?
+         // ?
     }
     void DisplayContentsOfStack() {
         NodeHistory* current = top;
