@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
+#include <fstream>
 #define INITIAL_SIZE 10
 
 class CommandHistory
@@ -15,20 +16,20 @@ public:
     char* text;
     char* pText;
     CommandHistory(int userCommand, int userLine, int userIndex, size_t userNumber, char* userText, char* previousText)
-        : command(userCommand), line(userLine), index(userIndex), number(userNumber), pText(NULL) {
-        if (userText != NULL) {
+        : command(userCommand), line(userLine), index(userIndex), number(userNumber), pText(nullptr) {
+        if (userText != nullptr) {
             text = new char[strlen(userText) + 1];
             strcpy(text, userText);
         }
         else {
-            text = NULL;
+            text = nullptr;
         }
-        if (previousText != NULL) {
+        if (previousText != nullptr) {
             pText = new char[strlen(previousText) + 1];
             strcpy(pText, previousText);
         }
         else {
-            pText = NULL;
+            pText = nullptr;
         }
     }
     void Print()
@@ -53,7 +54,7 @@ public:
     NodeHistory* next;
 
     NodeHistory(int userCommand, int userLine, int userIndex, size_t userNumber, char* userText, char* previousText)
-        : next(NULL), commandInfo(userCommand, userLine, userIndex, userNumber, userText, previousText) {};
+        : next(nullptr), commandInfo(userCommand, userLine, userIndex, userNumber, userText, previousText) {};
 
 };
 
@@ -63,7 +64,7 @@ public:
     NodeHistory* top;
     size_t size;
     HistoryStack()
-        : size(0), top(NULL) {}
+        : size(0), top(nullptr) {}
 
     void PushToStack(CommandHistory* commandInfo) {
         NodeHistory* node = new NodeHistory(commandInfo->command, commandInfo->line, commandInfo->index, commandInfo->number, commandInfo->text, commandInfo->pText);
@@ -73,7 +74,7 @@ public:
 
     }
     void PopFromStack() {
-        if (top == NULL) {
+        if (top == nullptr) {
             return;
         }
         NodeHistory* temp = top;
@@ -83,25 +84,25 @@ public:
     }
     void DisplayContentsOfStack() {
         NodeHistory* current = top;
-        if (current == NULL) {
+        if (current == nullptr) {
             std::cout << "The stack is empty!" << std::endl;
             return;
         }
         std::cout << "Contents of the stack:" << std::endl;
-        while (current != NULL) {
+        while (current != nullptr) {
             current->commandInfo.Print();
             current = current->next;
         }
     }
     ~HistoryStack() {
         NodeHistory* current = top;
-        while (current != NULL) {
+        while (current != nullptr) {
             NodeHistory* next = current->next;
             delete current;
             current = next;
 
         }
-        top = NULL;
+        top = nullptr;
         size = 0;
     }
 
@@ -111,10 +112,10 @@ class NodeForClipboard
 public:
     char* text;
     NodeForClipboard* next;
-    NodeForClipboard() : text(NULL), next(NULL) {}
+    NodeForClipboard() : text(nullptr), next(nullptr) {}
 
     NodeForClipboard(char* newText)
-        : text(newText), next(NULL) {}
+        : text(newText), next(nullptr) {}
 
 };
 
@@ -124,19 +125,19 @@ class Clipboard
 public:
     NodeForClipboard* top;
     Clipboard()
-        : size(0), top(NULL) {}
+        : size(0), top(nullptr) {}
 
     void DisplayContentsOfClipboard()
     {
-        NodeForClipboard* current = NULL;
+        NodeForClipboard* current = nullptr;
         current = top;
-        if (current == NULL)
+        if (current == nullptr)
         {
             std::cout << "Your clipboard is empty!" << std::endl;
             return;
         }
         std::cout << "Contents of your clipboard:" << std::endl;
-        while (current != NULL)
+        while (current != nullptr)
         {
             std::cout << current->text << std::endl;
             current = current->next;
@@ -146,18 +147,18 @@ public:
     ~Clipboard()
     {
         NodeForClipboard* current = top;
-        while (current != NULL)
+        while (current != nullptr)
         {
             NodeForClipboard* next = current->next;
             delete[] current->text;
             delete current;
             current = next;
         }
-        top = NULL;
+        top = nullptr;
     }
     void PushToStack(char* text) {
         NodeForClipboard* node = new NodeForClipboard;
-        if (node == NULL) {
+        if (node == nullptr) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
@@ -169,9 +170,9 @@ public:
     NodeForClipboard* PopFromClipboardAndReturnLastValue()
     {
         NodeForClipboard* temp = top;
-        if (temp == NULL)
+        if (temp == nullptr)
         {
-            return NULL;
+            return nullptr;
         }
         top = top->next;
         size--;
@@ -185,7 +186,7 @@ class TextEditor
     char** createArray(int rows, int columns)
     {
         char** array = new char*[rows];
-        if (array == NULL)
+        if (array == nullptr)
         {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
@@ -194,7 +195,7 @@ class TextEditor
         for (int i = 0; i < rows; i++)
         {
             array[i] = new char[columns];
-            if (array[i] == NULL)
+            if (array[i] == nullptr)
             {
                 std::cerr << "Memory allocation failed" << std::endl;
                 exit(EXIT_FAILURE);
@@ -206,7 +207,7 @@ class TextEditor
 
     void AdjustSizeOfLine(int line, int length) {
         char* temp = (char*)realloc(text[line], (length + 1) * sizeof(char));
-        if (temp == NULL) {
+        if (temp == nullptr) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
@@ -217,22 +218,22 @@ class TextEditor
 
     void MakeSizeOfEditorSmaller(int line) {
         if (line < 0 || line >= lines) {
-            printf("Invalid line number\n");
+            std::cout << "Invalid line number" << std::endl;
             return;
         }
         size_t newLinesCapacity = lines - line;
         if (newLinesCapacity > lines) {
-            printf("Invalid newLinesCapacity calculated\n");
+            std::cout << "Invalid newLinesCapacity calculated" << std::endl;
             return;
         }
         for (size_t i = lines; i > newLinesCapacity; i--) {
-            if (text[i - 1] != NULL) {
-                free(text[i - 1]);
-                text[i - 1] = NULL;
+            if (text[i - 1] != nullptr) {
+                delete[] text[i - 1];
+                text[i - 1] = nullptr;
             }
         }
         char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
-        if (temp == NULL) {
+        if (temp == nullptr) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
@@ -264,14 +265,14 @@ public:
     void Print()
     {
         for (int i = 0; i < lines; i++) {
-            printf("%s\n", text[i]);
+            std::cout << text[i] << std::endl;
         }
     }
     void MakeLineLonger(size_t currentLength, size_t newLength)
     {
         size_t newCapacity = currentLength + newLength + 1;
         char* temp = (char*)realloc(text[currentLine], newCapacity * sizeof(char));
-        if (temp == NULL) {
+        if (temp == nullptr) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
@@ -281,7 +282,7 @@ public:
     void MakeMoreLines(int line) {
         size_t newLinesCapacity = line + 1;
         char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
-        if (temp == NULL)
+        if (temp == nullptr)
         {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
@@ -289,7 +290,7 @@ public:
         text = temp;
         for (size_t i = lines; i < newLinesCapacity; i++) {
             text[i] = (char*)malloc(symbolsPerLine * sizeof(char));
-            if (text[i] == NULL)
+            if (text[i] == nullptr)
             {
                 std::cerr << "Memory allocation failed" << std::endl;
                 exit(EXIT_FAILURE);
@@ -365,22 +366,22 @@ public:
 
         if (user)
         {
-            CommandHistory commandInfo(12, line, index, number, previousText, NULL);
+            CommandHistory commandInfo(12, line, index, number, previousText, nullptr);
             stackUndo.PushToStack(&commandInfo);
         }
     }
     void StartNewLine(bool user)
     {
-        printf("You current line: %d. Starting new line...\n", currentLine);
+        std::cout << "Your current line: " << currentLine << ". Starting new line..." << std::endl;
         if (currentLine + 1 > lines)
         {
             MakeMoreLines(currentLine);
         }
         currentLine++;
-        printf("Your new line: %d\n", currentLine);
+        std::cout << "Your new line: " << currentLine << std::endl;
         if (user)
         {
-            CommandHistory commandInfo(2, currentLine, 0, 0, NULL, NULL);
+            CommandHistory commandInfo(2, currentLine, 0, 0, nullptr, nullptr);
             stackUndo.PushToStack(&commandInfo);
         }
     }
@@ -388,7 +389,7 @@ public:
     {
         if (currentLine == 0)
         {
-            printf("nothing to delete!\n");
+            std::cout << "nothing to delete!" << std::endl;
             return;
         }
         MakeSizeOfEditorSmaller(line);
@@ -404,7 +405,7 @@ public:
             DeleteSymbols(line, index, number, currentLength, false);
             if (user)
             {
-                CommandHistory commandInfo(15, line, index, number, textToBuffer, NULL);
+                CommandHistory commandInfo(15, line, index, number, textToBuffer, nullptr);
                 stackUndo.PushToStack(&commandInfo);
             }
         }
@@ -418,7 +419,7 @@ public:
 
         if (index + newTextLength > currentLength)
         {
-            printf("You cannot replace more symbols than present!\n");
+            std::cout << "You cannot replace more symbols than present!" << std::endl;
             return;
         }
         char* previousText = SavePreviousText(line, index, newTextLength);       
@@ -434,9 +435,9 @@ public:
   
     void Paste(Clipboard* clipboard)
     {
-        if (clipboard->top == NULL)
+        if (clipboard->top == nullptr)
         {
-            printf("There is nothing to paste, your clipboard is empty!\n");
+            std::cout << "There is nothing to paste, your clipboard is empty!" << std::endl;
             return;
         }
         int line, index;
@@ -454,31 +455,32 @@ public:
             exit(EXIT_FAILURE);
         for (int i = 0; i < lines; i++)
         {
-            free(text[i]);
-            text[i] = NULL;
+            delete[] text[i];
+            text[i] = nullptr;
         }
-        free(text);
-        text = NULL;
-        printf("Editor has been cleand!\n");
+        delete text;
+        text = nullptr;
     }
 
-    int ChooseLineIndexNumber(int* line, int* index, int* number, size_t* currentLength)
-    {
-        printf("Choose line, index and number of symbols:\n");
-        if (scanf("%d %d %d", line, index, number) != 3 || *line < 0 || *index < 0 || *number < 0) {
-            printf("Invalid input!\n");
-            while (getchar() != '\n');
-            return 0;
-        }
-        *currentLength = strlen(text[*line]);
-        std::cout << "There are " << lines << " lines and, on your chosen line there are " << *currentLength << " symbols" << std::endl;
-
-        if (*index >= *currentLength || *number > *currentLength - *index || *currentLength == 0 || *line >= lines) {
-            std::cout << "Something is wrong in your numbers! Look higher!" << std::endl;
-            return 0;
-        }
-        return 1;
+    int ChooseLineIndexNumber(int* line, int* index, int* number, size_t* currentLength) {
+    std::cout << "Choose line, index and number of symbols:" << std::endl;
+    if (!(std::cin >> *line >> *index >> *number) || *line < 0 || *index < 0 || *number < 0) {
+        std::cout << "Invalid input!" << std::endl;
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        return 0;
     }
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    
+    *currentLength = strlen(text[*line]);
+    std::cout << "There are " << lines << " lines and, on your chosen line there are " << *currentLength << " symbols" << std::endl;
+
+    if (*index >= *currentLength || *number > *currentLength - *index || *currentLength == 0 || *line >= lines) {
+        std::cout << "Something is wrong in your numbers! Look higher!" << std::endl;
+        return 0;
+    }
+    return 1;
+}
     int ChooseLineIndex(int* line, int* index) {
         std::cout << "Choose line and index:" << std::endl;
         if (scanf("%d %d", line, index) != 2 || *line < 0 || *index < 0) {
@@ -491,9 +493,10 @@ public:
         return 1;
     }
     void Clear() {
-        lines, symbolsPerLine = INITIAL_SIZE; 
+        
+        lines = symbolsPerLine = INITIAL_SIZE;
         text = createArray(INITIAL_SIZE, INITIAL_SIZE);
-        currentLine = 0;       
+        currentLine = 0;
     }
 };
 
@@ -513,7 +516,7 @@ class UserInput
     void AdjustNeededSizeForUserArray(size_t realLength)
     {
         char* temp = (char*)realloc(text, (realLength + 1) * sizeof(char));
-        if (temp == NULL)
+        if (temp == nullptr)
         {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
@@ -526,7 +529,7 @@ public:
     size_t capacity;
     char* CreateArrayForUserInput() {
         char* text = new char[INITIAL_SIZE];
-        if (text == NULL)
+        if (text == nullptr)
         {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
@@ -541,10 +544,9 @@ public:
     }
     ~UserInput()
     {
-        if (text != NULL)
+        if (text != nullptr)
         {
            delete[] text;
-            text = NULL; 
         }
     }
     void TakeUserInput()
@@ -566,45 +568,39 @@ public:
 
 class Command
 {
-    static void SaveToFile(TextEditor* editor, char fileName[])
-    {
-        FILE* file;
-        file = fopen(fileName, "w");
-        if (file == NULL)
-        {
-            std::cout << "This file cannot be opened or something bad happened to it!" << std::endl;
+    static void SaveToFile(TextEditor* editor, const char* fileName) {
+        std::ofstream file(fileName);
+        if (!file.is_open()) {
+            std::cout << "Error opening file. It cannot be opened or something bad happened to it!" << std::endl;
             return;
         }
-        for (int i = 0; i < editor->lines; i++)
-        {
-            fputs(editor->text[i], file);
-            fputc('\n', file);
+        for (int i = 0; i < editor->lines; ++i) {
+            file << editor->text[i] << '\n';
         }
-        fclose(file);
+        file.close();
         std::cout << "Text has been saved successfully!" << std::endl;
-
     }
+
     static void LoadFromFile(TextEditor* editor, char fileName[]) {
         FILE* file = fopen(fileName, "r");
-        if (file == NULL) {
+        if (file == nullptr) {
             std::cout << "Error opening file. It looks like it does not exist!" << std::endl;
             return;
         }
 
         size_t bufferCapacity = INITIAL_SIZE;
-        char* buffer = (char*)malloc(sizeof(char)* INITIAL_SIZE);
+        char* buffer = new char[INITIAL_SIZE];
         if (buffer == NULL) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
-        
-        
-        editor->Clear(); 
-        while (fgets(buffer, bufferCapacity, file) != NULL) {
+        editor->Clear();
+
+        while (fgets(buffer, bufferCapacity, file) != nullptr) {
             while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
                 bufferCapacity += bufferCapacity;
                 char* temp = (char*)realloc(buffer, bufferCapacity * sizeof(char));
-                if (temp == NULL) {
+                if (temp == nullptr) {
                     std::cerr << "Memory allocation failed" << std::endl;
                     exit(EXIT_FAILURE);
                 }
@@ -619,7 +615,7 @@ class Command
             editor->AppendToEnd(buffer, false);
             editor->currentLine++;
         }
-        free(buffer);
+        delete[] buffer;
         fclose(file);
         std::cout << "File has been loaded successfully!" << std::endl;
 
@@ -639,7 +635,7 @@ class Command
         {
             editor->MakeMoreLines(line);
         }
-        CommandHistory commandInfo(8, editor->currentLine, 0, 0, NULL, NULL);
+        CommandHistory commandInfo(8, editor->currentLine, 0, 0, nullptr, nullptr);
         editor->stackUndo.PushToStack(&commandInfo);
         editor->currentLine = line;
         std::cout << "Your line: " << editor->currentLine << std::endl;
@@ -702,7 +698,7 @@ class Command
         size_t M = strlen(pattern);
         if (M == 0) return;
         int* lps = new int[M];
-        if (lps == NULL) {
+        if (lps == nullptr) {
             std::cerr << "Memory allocation failed" << std::endl;
             return;
         }    LPSArray(pattern, M, lps);
@@ -854,9 +850,7 @@ class Command
         default:
             std::cout << "I can't return your previous text!" << std::endl;
             return;
-        }
-        
-        
+        }       
     }
     static void ChooseAbortActionForRedo(NodeHistory* node, TextEditor* editor, Clipboard* clipboard)
     {
@@ -900,9 +894,7 @@ class Command
             ChooseAbortActionForUndo(undoNode, editor);
         }
         else {
-            std::cout << "Nothing more to undo." << std::endl;
-
-          
+            std::cout << "Nothing more to undo." << std::endl;         
         }
     }
 
