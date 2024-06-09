@@ -88,7 +88,6 @@ public:
         NodeHistory* temp = top;
         top = top->next;
         size--;
-        delete temp; // ?
     }
     void DisplayContentsOfStack() {
         NodeHistory* current = top;
@@ -214,7 +213,7 @@ class TextEditor
     }
 
     void AdjustSizeOfLine(int line, int length) {
-        char* temp = (char*)realloc(text[line], (length + 1) * sizeof(char));
+        char* temp = (char*)realloc(text[line], (cursor.index) * sizeof(char));
         if (temp == nullptr) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
@@ -427,7 +426,7 @@ public:
             text[cursor.line][i] = text[cursor.line][i + number];
         }
         currentLength -= number;
-        AdjustSizeOfLine(cursor.line, currentLength + 1);
+        AdjustSizeOfLine(cursor.line, cursor.index);
         MoveCursor(cursor.line, currentLength);
 
         if (user)
@@ -579,7 +578,7 @@ class UserInput
         text = temp;
         capacity = newCapacity;
     }
-    void AdjustNeededSizeForUserArray(size_t realLength)
+    /*void AdjustNeededSizeForUserArray(size_t realLength)
     {
         char* temp = (char*)realloc(text, (realLength + 1) * sizeof(char));
         if (temp == nullptr)
@@ -589,7 +588,7 @@ class UserInput
         }
         text = temp;
         capacity = realLength + 1;
-    }
+    }*/
 public:
     char* text;
     size_t capacity;
@@ -628,7 +627,7 @@ public:
             MakeUserArrayLonger();
         }
         text[strcspn(text, "\n")] = '\0';
-        AdjustNeededSizeForUserArray(currentLength);
+        //AdjustNeededSizeForUserArray(currentLength);
     }
 };
 
@@ -959,6 +958,8 @@ class Command
             editor->stackUndo.PopFromStack();
             editor->stackRedo.PushToStack(&undoNode->commandInfo);
             ChooseAbortActionForUndo(undoNode, editor);
+            editor->MoveCursor(undoNode->commandInfo.line, strlen(editor->text[undoNode->commandInfo.line]));
+            delete undoNode;
         }
         else {
             std::cout << "Nothing more to undo." << std::endl;         
@@ -971,6 +972,7 @@ class Command
             editor->stackRedo.PopFromStack();
            ChooseAbortActionForRedo(redoNode, editor, clipboard); 
             editor->stackUndo.PushToStack(&redoNode->commandInfo);
+            editor->MoveCursor(redoNode->commandInfo.line, strlen(editor->text[redoNode->commandInfo.line]));
             delete redoNode;
         }
         else {
