@@ -4,7 +4,9 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#define INITIAL_SIZE 10
+#define INITIAL_SIZE_ROW 100
+#define INITIAL_SIZE_LINES 20
+
 class Cursor
 {
 public:
@@ -265,10 +267,10 @@ public:
 
 
     TextEditor() {
-        lines = INITIAL_SIZE;
+        lines = INITIAL_SIZE_LINES;
         currentLine = 0;
-        symbolsPerLine = INITIAL_SIZE;
-        text = createArray(INITIAL_SIZE, INITIAL_SIZE);
+        symbolsPerLine = INITIAL_SIZE_ROW;
+        text = createArray(INITIAL_SIZE_LINES, INITIAL_SIZE_ROW);
     }
 
     void Print()
@@ -558,9 +560,9 @@ public:
         return 1;
     }
     void Clear() {
-        
-        lines = symbolsPerLine = INITIAL_SIZE;
-        text = createArray(INITIAL_SIZE, INITIAL_SIZE);
+        lines = INITIAL_SIZE_LINES;
+        symbolsPerLine = INITIAL_SIZE_ROW;
+        text = createArray(INITIAL_SIZE_LINES, INITIAL_SIZE_ROW);
         currentLine = 0;
     }
 };
@@ -578,7 +580,7 @@ class UserInput
         text = temp;
         capacity = newCapacity;
     }
-    /*void AdjustNeededSizeForUserArray(size_t realLength)
+    void AdjustNeededSizeForUserArray(size_t realLength)
     {
         char* temp = (char*)realloc(text, (realLength + 1) * sizeof(char));
         if (temp == nullptr)
@@ -588,12 +590,12 @@ class UserInput
         }
         text = temp;
         capacity = realLength + 1;
-    }*/
+    }
 public:
     char* text;
     size_t capacity;
     char* CreateArrayForUserInput() {
-        char* text = new char[INITIAL_SIZE];
+        char* text = new char[INITIAL_SIZE_ROW];
         if (text == nullptr)
         {
             std::cerr << "Memory allocation failed" << std::endl;
@@ -605,7 +607,7 @@ public:
     UserInput()
     {
         text = CreateArrayForUserInput();
-        capacity = INITIAL_SIZE;
+        capacity = INITIAL_SIZE_ROW;
     }
     ~UserInput()
     {
@@ -627,7 +629,7 @@ public:
             MakeUserArrayLonger();
         }
         text[strcspn(text, "\n")] = '\0';
-        //AdjustNeededSizeForUserArray(currentLength);
+        AdjustNeededSizeForUserArray(currentLength);
     }
 };
 
@@ -653,8 +655,8 @@ class Command
             return;
         }
 
-        size_t bufferCapacity = INITIAL_SIZE;
-        char* buffer = new char[INITIAL_SIZE];
+        size_t bufferCapacity = INITIAL_SIZE_ROW;
+        char* buffer = new char[INITIAL_SIZE_ROW];
         if (buffer == NULL) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
