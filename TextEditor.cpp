@@ -187,7 +187,6 @@ public:
         size--;
         return temp;
     }
-
 };
 
 class TextEditor
@@ -265,7 +264,6 @@ public:
     HistoryStack stackUndo;
     Cursor cursor;
 
-
     TextEditor() {
         lines = INITIAL_SIZE_LINES;
         currentLine = 0;
@@ -273,39 +271,36 @@ public:
         text = createArray(INITIAL_SIZE_LINES, INITIAL_SIZE_ROW);
     }
 
-    void Print()
-    {
-        for (int i = 0; i < lines; i++) {
-            for (int j = 0; j <= strlen(text[i]); j++) {
+    void Print() {
+        for (int i = 0; i < lines; ++i) {
+            for (int j = 0; j <= strlen(text[i]); ++j) {
                 if (i == cursor.line && j == cursor.index) {
-                    printf("*");
+                    std::cout << "*";
                 }
                 if (j < strlen(text[i])) {
-                    printf("%c", text[i][j]);
+                    std::cout << text[i][j];
                 }
                 else {
-                    printf(" ");
+                    std::cout << " ";
                 }
             }
-            printf("\n");
+            std::cout << std::endl;
         }
 
         if (cursor.line >= lines) {
-            for (int i = lines; i <= cursor.line; i++) {
+            for (int i = lines; i <= cursor.line; ++i) {
                 if (i == cursor.line) {
-                    for (int j = 0; j < cursor.index; j++) {
-                        printf(" ");
+                    for (int j = 0; j < cursor.index; ++j) {
+                        std::cout << " ";
                     }
-                    printf("*\n");
+                    std::cout << "*" << std::endl;
                 }
                 else {
-                    printf("\n");
+                    std::cout << std::endl;
                 }
             }
         }
     }
-
-
 
     void MakeLineLonger(size_t currentLength, size_t newLength)
     {
@@ -635,14 +630,20 @@ public:
 
 class Command
 {
-    static void SaveToFile(TextEditor* editor, const char* fileName) {
+    static void SaveToFile(TextEditor* editor, const char* fileName)
+    {
         std::ofstream file(fileName);
-        if (!file.is_open()) {
-            std::cout << "Error opening file. It cannot be opened or something bad happened to it!" << std::endl;
+        if (!file.is_open())
+        {
+            std::cout << "This file cannot be opened or something bad happened to it!" << std::endl;
             return;
         }
-        for (int i = 0; i < editor->lines; ++i) {
-            file << editor->text[i] << '\n';
+        for (int i = 0; i < editor->lines; i++)
+        {
+            if (editor->text[i] != nullptr)
+            {
+                file << editor->text[i] << '\n';
+            }
         }
         file.close();
         std::cout << "Text has been saved successfully!" << std::endl;
@@ -730,9 +731,8 @@ class Command
             "16 - paste\n"
             "17 - undo\n"
             "18 - redo\n"
-            "20/21 - display history of text improvement\n";
-
-
+            "20/21 - display history of text improvement\n"
+            "22 - move your cursor\n";
     }
     static void LPSArray(char pattern[], size_t patternLength, int* lps)
     {
@@ -978,8 +978,25 @@ class Command
             delete redoNode;
         }
         else {
-            std::cout << "Nothing more to undo." << std::endl;
+            std::cout << "Nothing more to redo." << std::endl;
         }
+    }
+    static void MoveCursorUser(TextEditor* editor)
+    {
+        int line, index;
+        if (!editor->ChooseLineIndex(&line, &index))
+        {
+            return;
+        }
+        if (line > editor->lines)
+        {
+            editor->MakeMoreLines(line);
+        }
+        if (index > strlen(editor->text[line]))
+        {
+            editor->MakeLineLonger(strlen(editor->text[line]), index);
+        }
+        editor->MoveCursor(line, index);
     }
 
 
@@ -1064,20 +1081,7 @@ public:
             editor->stackUndo.DisplayContentsOfStack();
             break;
         case 22:
-            int line, index;
-            if (!editor->ChooseLineIndex(&line, &index))
-            {
-                return;
-            }
-            if (line > editor->lines)
-            {
-                editor->MakeMoreLines(line);
-            }
-            if (index > strlen(editor->text[line]))
-            {
-                editor->MakeLineLonger(strlen(editor->text[line]), index);
-            }
-            editor->MoveCursor(line, index);
+            MoveCursorUser(editor);
             break;
 
         default:
@@ -1088,18 +1092,23 @@ public:
 
 int main() {
     std::cout << "Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)" << std::endl;
-    Clipboard clipboard;   
+    Clipboard clipboard;
     TextEditor editor;
     int command;
     do {
-        std::cout << "Enter command: " ;
-        if (scanf("%d", &command) != 1) {
-            while (getchar() != '\n');
+        std::cout << "Enter command: ";
+        if (!(std::cin >> command)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Invalid input. Please enter a valid command." << std::endl;
             continue;
         }
-        while (getchar() != '\n');
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (command == 0) {
+            break;
+        }
         Command commandUser(command);
         commandUser.ProcessCommand(commandUser.command, &editor, &clipboard);
-    } while (command != 0);
+    } while (true);
     return 0;
 }
