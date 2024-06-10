@@ -214,15 +214,15 @@ class TextEditor
     }
 
     void AdjustSizeOfLine(int line, int length) {
-        char* temp = (char*)realloc(text[line], (cursor.index) * sizeof(char));
-        if (temp == nullptr) {
-            std::cerr << "Memory allocation failed" << std::endl;
+        char* temp = (char*)realloc(text[line], (length + 1) * sizeof(char));
+        if (temp == NULL) {
+            printf("Memory reallocation failed\n");
             exit(EXIT_FAILURE);
         }
         text[line] = temp;
         text[line][length] = '\0';
-
     }
+
 
     void MakeSizeOfEditorSmaller(int line) {
         if (line < 0 || line >= lines) {
@@ -343,53 +343,55 @@ public:
             MakeLineLonger(currentLength, newLength);
         }
         strcat(text[currentLine], newText);
-        MoveCursor(currentLine, currentLength + newLength);
 
         if (user)
         {
             CommandHistory commandInfo(1, currentLine, currentLength, newLength, newText, NULL);
             stackUndo.PushToStack(&commandInfo);
         }
+        MoveCursor(currentLine, currentLength + newLength);
+
     }
-    void InsertAtIndex(char* newText, bool user) {
+    void InsertAtIndex(int line, int index, char* newText, bool user) {
 
-        if (cursor.line >= lines) {
-            MakeMoreLines(cursor.line);
-            currentLine = cursor.line;
+        if (line >= lines) {
+            MakeMoreLines(line);
+            currentLine = line;
         }
-        currentLine = cursor.line;
+        currentLine = line;
 
-        size_t currentLength = strlen(text[cursor.line]);
+        size_t currentLength = strlen(text[line]);
         size_t newLength = strlen(newText);
 
         if (currentLength + newLength >= symbolsPerLine) {
             MakeLineLonger(currentLength, newLength + 1);
         }
 
-        if (cursor.index > currentLength) {
-            for (size_t i = currentLength; i < cursor.index; i++) {
-                text[cursor.line][i] = ' ';
+        if (index > currentLength) {
+            for (size_t i = currentLength; i < index; i++) {
+                text[line][i] = ' ';
             }
-            text[cursor.line][cursor.index] = '\0';
-            currentLength = cursor.index;
+            text[line][index] = '\0';
+            currentLength = index;
         }
 
-        for (int i = currentLength; i >= cursor.index; i--) {
-            text[cursor.line][i + newLength] = text[cursor.index][i];
+        for (int i = currentLength; i >= index; i--) {
+            text[line][i + newLength] = text[index][i];
         }
 
         for (int i = 0; i < newLength; i++) {
-            text[cursor.line][cursor.index + i] = newText[i];
+            text[line][index + i] = newText[i];
         }
 
-        text[cursor.line][currentLength + newLength] = '\0';
-        MoveCursor(cursor.line, currentLength + newLength);
+        text[line][currentLength + newLength] = '\0';
 
         if (user)
         {
             CommandHistory commandInfo(5, cursor.line, cursor.index, newLength, newText, NULL);
             stackUndo.PushToStack(&commandInfo);
         }
+        MoveCursor(cursor.line, currentLength + newLength);
+
     }
     void MoveCursor(int userLine, int userIndex)
     {
@@ -415,23 +417,24 @@ public:
         currentLine = cursor.line;
     }
 
-    void DeleteSymbols(size_t number, int currentLength, bool user)
+    void DeleteSymbols(int line, int index, size_t number, int currentLength, bool user)
     {
         char* previousText = SavePreviousText(number);
-        for (int i = cursor.index; i < currentLength; i++)
+        for (int i = index; i < currentLength; i++)
         {
-            text[cursor.line][i] = text[cursor.line][i + number];
+            text[line][i] = text[line][i + number];
         }
         currentLength -= number;
-        AdjustSizeOfLine(cursor.line, cursor.index);
-        MoveCursor(cursor.line, currentLength);
-
+        AdjustSizeOfLine(line, currentLength + 1);
         if (user)
         {
-            CommandHistory commandInfo(12, cursor.line, cursor.index, number, previousText, nullptr);
+            CommandHistory commandInfo(12, line, index, number, previousText, nullptr);
             stackUndo.PushToStack(&commandInfo);
         }
+        MoveCursor(line, currentLength);
+
     }
+    
     void StartNewLine(bool user)
     {
         std::cout << "Your current line: " << currentLine << ". Starting new line..." << std::endl;
@@ -441,13 +444,14 @@ public:
         }
         currentLine++;
         std::cout << "Your new line: " << currentLine << std::endl;
-        MoveCursor(currentLine, 0);
 
         if (user)
         {
             CommandHistory commandInfo(2, currentLine, 0, 0, nullptr, nullptr);
             stackUndo.PushToStack(&commandInfo);
         }
+        MoveCursor(currentLine, 0);
+
     }
     void DeleteLine(int line)
     {
@@ -459,47 +463,48 @@ public:
         MakeSizeOfEditorSmaller(line);
         currentLine--;
     }
-    void CutOrCopy(Clipboard* clipboard, bool needCut, bool user, int number,  size_t currentLength) 
+    void CutOrCopy(Clipboard* clipboard, bool needCut, bool user, int line, int number, int index, size_t currentLength) 
     {       
         char* textToBuffer = SavePreviousText(number);      
         clipboard->PushToStack(textToBuffer);
 
         if (needCut)
         {
-            DeleteSymbols(number, currentLength, false);
+            DeleteSymbols(line, index, number, currentLength, false);
             if (user)
             {
-                CommandHistory commandInfo(15, cursor.line, cursor.index, number, textToBuffer, nullptr);
+                CommandHistory commandInfo(15,line, index, number, textToBuffer, nullptr);
                 stackUndo.PushToStack(&commandInfo);
             }
         }
         delete[] textToBuffer;
     }
 
-    void InsertWithReplacement(char* newText, bool user)
+    void InsertWithReplacement(int line, int index, char* newText, bool user)
     {
-        size_t currentLength = strlen(text[cursor.line]);
+        size_t currentLength = strlen(text[line]);
         size_t newTextLength = strlen(newText);
 
-        if (cursor.index + newTextLength > currentLength)
+        if (index + newTextLength > currentLength)
         {
             std::cout << "You cannot replace more symbols than present!" << std::endl;
             return;
         }
         char* previousText = SavePreviousText(newTextLength);       
         for (int i = 0; i < newTextLength; i++) {
-            text[cursor.line][cursor.index + i] = newText[i];
+            text[line][index + i] = newText[i];
         }
-        MoveCursor(cursor.line, newTextLength);
 
         if (user)
         {
-            CommandHistory commandInfo(14, cursor.line, cursor.index, newTextLength, newText, previousText);
+            CommandHistory commandInfo(13, line, index, newTextLength, newText, previousText);
             stackUndo.PushToStack(&commandInfo);
         }
+        MoveCursor(line, newTextLength);
+
     }
   
-    void Paste(Clipboard* clipboard)
+    void Paste(Clipboard* clipboard, TextEditor* editor)
     {
         if (clipboard->top == nullptr)
         {
@@ -508,7 +513,7 @@ public:
         }
         
         NodeForClipboard* node = clipboard->PopFromClipboardAndReturnLastValue();
-        InsertAtIndex(node->text, true);
+        InsertAtIndex(editor->cursor.line, editor->cursor.index, node->text, true);
        
     }
     ~TextEditor()
@@ -826,13 +831,10 @@ class Command
 
     static void DoCommand5(TextEditor* editor, UserInput* userInput)
     {
-        int line, index;
-        if (!editor->ChooseLineIndex(&line, &index)) {
-            return;
-        }
+        
         std::cout << "Enter text to insert:" << std::endl;
         userInput->TakeUserInput();
-        editor->InsertAtIndex(userInput->text, true);
+        editor->InsertAtIndex(editor->cursor.line, editor->cursor.index, userInput->text, true);
     }
 
     static void DoCommand6(TextEditor* editor, UserInput* userInput)
@@ -856,7 +858,7 @@ class Command
             return;
         }
 
-        editor->DeleteSymbols(number, currentLength, true);
+        editor->DeleteSymbols(editor->cursor.line, editor->cursor.index, number, currentLength, true);
     }
     static void DoCommand14or15(TextEditor* editor, Clipboard* clipboard, bool needCut)
 
@@ -866,7 +868,7 @@ class Command
         if (!editor->ChooseLineIndexNumber( &number, &currentLength)) {
             return;
         }
-        editor->CutOrCopy(clipboard, needCut, true, number,  currentLength);
+        editor->CutOrCopy(clipboard, needCut, true, editor->cursor.line,  number, editor->cursor.index, currentLength);
     }
 
     static void DoCommand13(TextEditor* editor, UserInput* userInput)
@@ -885,40 +887,40 @@ class Command
         }
         printf("Enter text to insert:\n");
         userInput->TakeUserInput();
-        editor->InsertWithReplacement(userInput->text, true);
+        editor->InsertWithReplacement(editor->cursor.line, editor->cursor.index, userInput->text, true);
     }
     static void ChooseAbortActionForUndo(NodeHistory* node, TextEditor* editor)
     {
         switch (node->commandInfo.command)
         {
         case 1:
-            editor->DeleteSymbols(strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
         case 2:
             editor->DeleteLine(node->commandInfo.line);
             break;
         case 5:
-            editor->DeleteSymbols(strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
         case 8:
             editor->currentLine = node->commandInfo.line;
             break;
         case 12:
-            editor->InsertAtIndex(node->commandInfo.text, false);
+            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
         case 13:
-            editor->InsertWithReplacement(node->commandInfo.pText, false);
+            editor->InsertWithReplacement(node->commandInfo.line, node->commandInfo.index, node->commandInfo.pText, false);
             break;
         case 14:
-            editor->InsertAtIndex( node->commandInfo.text, false);
+            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
         case 16:
-            editor->DeleteSymbols(strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
         default:
             std::cout << "I can't return your previous text!" << std::endl;
             return;
-        }       
+        }
     }
     static void ChooseAbortActionForRedo(NodeHistory* node, TextEditor* editor, Clipboard* clipboard)
     {
@@ -931,29 +933,28 @@ class Command
             editor->StartNewLine(false);
             break;
         case 5:
-            editor->InsertAtIndex(node->commandInfo.text, false);
+            editor->InsertAtIndex(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
         case 8:
             editor->currentLine = node->commandInfo.line;
             break;
         case 12:
-            editor->DeleteSymbols(node->commandInfo.number, strlen(editor->text[node->commandInfo.line]), false);
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, node->commandInfo.number, strlen(editor->text[node->commandInfo.line]), false);
             break;
         case 13:
-            editor->InsertWithReplacement(node->commandInfo.text, false);
+            editor->InsertWithReplacement(node->commandInfo.line, node->commandInfo.index, node->commandInfo.text, false);
             break;
         case 14:
-            editor->CutOrCopy(clipboard,true, false, node->commandInfo.number, strlen(editor->text[node->commandInfo.line]));
+            editor->CutOrCopy(clipboard, true, false, node->commandInfo.line, node->commandInfo.number, node->commandInfo.index, strlen(editor->text[node->commandInfo.line]));
             break;
         case 16:
-            editor->DeleteSymbols(strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
+            editor->DeleteSymbols(node->commandInfo.line, node->commandInfo.index, strlen(node->commandInfo.text), strlen(editor->text[node->commandInfo.line]), false);
             break;
         default:
             std::cout << "I can't return your previous text!" << std::endl;
             return;
         }
     }
-
     static void Undo(TextEditor* editor) {
         if (editor->stackUndo.size > 0) {
             NodeHistory* undoNode = editor->stackUndo.top;
@@ -1063,7 +1064,7 @@ public:
             DoCommand14or15(editor, clipboard, needCut);
             break;
         case 16:
-            editor->Paste(clipboard);
+            editor->Paste(clipboard, editor);
             break;
         case 17:
             Undo(editor);
