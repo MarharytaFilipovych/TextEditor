@@ -6,6 +6,7 @@
 #include <fstream>
 #define INITIAL_SIZE_OF_ROW 100
 #define INITIAL_SIZE_OF_LINES 20
+#include <string> 
 
 class CommandHistory
 {
@@ -257,7 +258,7 @@ public:
     HistoryStack stackUndo;
 
     TextEditor() {
-        lines = INITIAL_SIZE_OF_ROW;
+        lines = INITIAL_SIZE_OF_LINES;
         currentLine = 0;
         symbolsPerLine = INITIAL_SIZE_OF_ROW;
         text = createArray(INITIAL_SIZE_OF_LINES, INITIAL_SIZE_OF_ROW);
@@ -569,57 +570,70 @@ public:
 
 class Command
 {
-    static void SaveToFile(TextEditor* editor, const char* fileName) {
+    static void SaveToFile(TextEditor* editor, const char* fileName)
+    {
         std::ofstream file(fileName);
-        if (!file.is_open()) {
-            std::cout << "Error opening file. It cannot be opened or something bad happened to it!" << std::endl;
+        if (!file.is_open())
+        {
+            std::cout << "This file cannot be opened or something bad happened to it!" << std::endl;
             return;
         }
-        for (int i = 0; i < editor->lines; ++i) {
-            file << editor->text[i] << '\n';
+
+        for (int i = 0; i < editor->lines; i++)
+        {
+            if (editor->text[i] != nullptr)
+            {
+                file << editor->text[i] << '\n';
+            }
         }
+
         file.close();
         std::cout << "Text has been saved successfully!" << std::endl;
     }
-
-    static void LoadFromFile(TextEditor* editor, char fileName[]) {
-        FILE* file = fopen(fileName, "r");
-        if (file == nullptr) {
+    static void LoadFromFile(TextEditor* editor, const char* fileName) {
+        std::ifstream file(fileName);
+        if (!file.is_open()) {
             std::cout << "Error opening file. It looks like it does not exist!" << std::endl;
             return;
         }
 
         size_t bufferCapacity = INITIAL_SIZE_OF_ROW;
-        char* buffer = new char[INITIAL_SIZE_OF_ROW];
-        if (buffer == NULL) {
+        char* buffer = new char[bufferCapacity];
+        if (buffer == nullptr) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
-        editor->Clear();
 
-        while (fgets(buffer, bufferCapacity, file) != nullptr) {
-            while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
-                bufferCapacity += bufferCapacity;
-                char* temp = (char*)realloc(buffer, bufferCapacity * sizeof(char));
+        editor->Clear();
+        while (file.getline(buffer, bufferCapacity)) {
+            while (file.fail() && !file.eof()) {
+                file.clear();  // Clear the fail state
+                size_t oldLength = strlen(buffer);
+                bufferCapacity *= 2;
+                char* temp = new char[bufferCapacity];
                 if (temp == nullptr) {
                     std::cerr << "Memory allocation failed" << std::endl;
                     exit(EXIT_FAILURE);
                 }
+                std::copy(buffer, buffer + oldLength, temp);
+                delete[] buffer;
                 buffer = temp;
-                fgets(buffer + strlen(buffer), bufferCapacity - strlen(buffer), file);
+                file.getline(buffer + oldLength, bufferCapacity - oldLength);
             }
-            buffer[strcspn(buffer, "\n")] = '\0';
+
+            buffer[strcspn(buffer, "\n")] = '\0';  // Remove newline character
 
             if (editor->currentLine >= editor->lines) {
                 editor->MakeMoreLines(editor->currentLine + 1);
             }
+
             editor->AppendToEnd(buffer, false);
             editor->currentLine++;
         }
-        delete[] buffer;
-        fclose(file);
-        std::cout << "File has been loaded successfully!" << std::endl;
 
+        delete[] buffer;
+        file.close();
+        std::cout << "File has been loaded successfully!" << std::endl;
     }
     static void LineToModify(TextEditor* editor)
     {
@@ -1005,14 +1019,19 @@ int main() {
     TextEditor editor;
     int command;
     do {
-        std::cout << "Enter command: " ;
-        if (scanf("%d", &command) != 1) {
-            while (getchar() != '\n');
+        std::cout << "Enter command: ";
+        if (!(std::cin >> command)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Invalid input. Please enter a valid command." << std::endl;
             continue;
         }
-        while (getchar() != '\n');
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (command == 0) {
+            break;
+        }
         Command commandUser(command);
         commandUser.ProcessCommand(commandUser.command, &editor, &clipboard);
-    } while (command != 0);
+    } while (true);
     return 0;
 }
