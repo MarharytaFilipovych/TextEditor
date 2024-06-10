@@ -430,7 +430,7 @@ public:
         }
         if (user)
         {
-            CommandHistory commandInfo(14, line, index, newTextLength, newText, previousText);
+            CommandHistory commandInfo(13, line, index, newTextLength, newText, previousText);
             stackUndo.PushToStack(&commandInfo);
         }
     }
@@ -590,50 +590,44 @@ class Command
         file.close();
         std::cout << "Text has been saved successfully!" << std::endl;
     }
-    static void LoadFromFile(TextEditor* editor, const char* fileName) {
-        std::ifstream file(fileName);
-        if (!file.is_open()) {
+    static void LoadFromFile(TextEditor* editor, char fileName[]) {
+        FILE* file = fopen(fileName, "r");
+        if (file == nullptr) {
             std::cout << "Error opening file. It looks like it does not exist!" << std::endl;
             return;
         }
 
         size_t bufferCapacity = INITIAL_SIZE_OF_ROW;
-        char* buffer = new char[bufferCapacity];
-        if (buffer == nullptr) {
+        char* buffer = new char[INITIAL_SIZE_OF_ROW];
+        if (buffer == NULL) {
             std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
-
         editor->Clear();
-        while (file.getline(buffer, bufferCapacity)) {
-            while (file.fail() && !file.eof()) {
-                file.clear();  // Clear the fail state
-                size_t oldLength = strlen(buffer);
-                bufferCapacity *= 2;
-                char* temp = new char[bufferCapacity];
+
+        while (fgets(buffer, bufferCapacity, file) != nullptr) {
+            while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
+                bufferCapacity += bufferCapacity;
+                char* temp = (char*)realloc(buffer, bufferCapacity * sizeof(char));
                 if (temp == nullptr) {
                     std::cerr << "Memory allocation failed" << std::endl;
                     exit(EXIT_FAILURE);
                 }
-                std::copy(buffer, buffer + oldLength, temp);
-                delete[] buffer;
                 buffer = temp;
-                file.getline(buffer + oldLength, bufferCapacity - oldLength);
+                fgets(buffer + strlen(buffer), bufferCapacity - strlen(buffer), file);
             }
-
-            buffer[strcspn(buffer, "\n")] = '\0';  // Remove newline character
+            buffer[strcspn(buffer, "\n")] = '\0';
 
             if (editor->currentLine >= editor->lines) {
                 editor->MakeMoreLines(editor->currentLine + 1);
             }
-
             editor->AppendToEnd(buffer, false);
             editor->currentLine++;
         }
-
         delete[] buffer;
-        file.close();
+        fclose(file);
         std::cout << "File has been loaded successfully!" << std::endl;
+
     }
     static void LineToModify(TextEditor* editor)
     {

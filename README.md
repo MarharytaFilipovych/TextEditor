@@ -1,5 +1,7 @@
 # TextEditor
 
+# Assignment 1
+
 ## Available Commands
 
 There are a total of 12 commands. Below are descriptions and screenshots illustrating their usage:
@@ -155,3 +157,152 @@ Clears the console output. This is better to demostrate in a classroom.
 
 ![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%206%20(picture%201).png)
 ![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%206(picture%202).png)
+
+
+# Assignment 2
+
+Overall, this text editor implements 21 commands. In this assignment, I added 7 main commands and additional commands for enhanced functionality. The editor is designed with an object-oriented approach and uses a stack data structure to manage clipboard operations and undo/redo functionality.
+
+## Main Commands
+
+### 13. Insert with Replacement 
+Inserts text at a specified position, replacing any existing text.
+
+![Insert with Replacement](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+### 12. Delete 
+Deletes specified text or a portion of the text.
+
+![Delete](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+### 14. Cut 
+Cuts a portion of the text and places it in the clipboard.
+
+![Cut](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+### 15. Copy 
+Copies a portion of the text to the clipboard without removing it from the document.
+
+![Copy](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+### 16. Paste 
+Pastes the text from the clipboard into the document at the specified position.
+
+![Paste](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+### 17. Undo 
+Reverts the last change made to the document.
+
+![Undo](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+### 18. Redo 
+Reapplies a change that was undone.
+
+![Redo](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+## Additional Commands
+
+### 19. Display Clipboard Content
+Displays the current contents of the clipboard.
+
+![Display Clipboard Content](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+### 20/21. Display Redo/Undo Stack 
+Shows the history of changes that can be undone.
+
+![Display Undo Stack](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+
+## Combined Task Examples
+
+### First Combined Task
+
+**Steps:**
+1. Append text "Combined Task Examples"
+2. Delete symbols first 9 symbols
+3. Print text
+4. Insert with replacement - replace word "Task" with "code"
+5. Print text
+6. Copy word "code"
+7. Paste it in the end of the sentence
+
+![Test 1 - Step 1](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/Test1(1%20picture).png)
+![Test 1 - Step 2](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test1(2%20picture).png)
+
+### Second Combined Task
+
+**Steps:**
+1. Append text 
+2. Start a new line
+3. Append more text
+4. Insert with replacement
+5. Print text
+6. Undo 2 times
+7. Redo 1 time
+8. Print text
+
+![Test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test2.png)
+
+### Third Combined Task
+
+**Steps:**
+1. Append text "Today is a good day"
+2. Cut word "Today"
+3. Print
+4. Display content of the clipboard
+5. Paste in the end
+7. Copy word "day"
+8. Paste it somewhere
+9. Print
+
+![Test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test3(1%20picture).png)
+![Test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%203(2%20ptcture).png)
+
+### Fourth Combined Task
+
+**Steps:**
+1. Append text
+2. Insert text at line 5
+3. Switch to the second line
+4. Append more text
+5. Undo 1 time
+6. Print text
+7. Redo 1 time
+8. Print text
+
+![Test 4](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+
+### Fifth Combined Task
+
+**Steps:**
+1. Start a new line
+2. Append the words "I have a lab to do this week"
+3. Cut word "lab"
+4. Insert "tset " between "a" and "to" (index 1 9)
+5. Delete last word
+6. Append "day"
+7. Print text
+8. Replace "have" with 'need'
+9. Print text
+10. Undo
+11. Print
+
+![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%205(picture1).png)
+![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test5(picture%202).png)
+
+### Sixth Combined Task
+
+**Steps**
+1. Append to end
+2. Print
+3. Replace in the middle something
+4. Print
+5. Delete 
+6. Copy as much as you can
+7. Paste it
+8. Print
+9. Exit
+
+![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%206%20(picture%201).png)
+![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%206(picture%202).png)
+
