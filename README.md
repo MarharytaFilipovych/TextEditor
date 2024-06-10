@@ -168,49 +168,47 @@ Overall, this text editor implements 21 commands. In this assignment, I added 7 
 ### 13. Insert with Replacement 
 Inserts text at a specified position, replacing any existing text.
 
-![Insert with Replacement](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Insert with Replacement](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/Inseert%20with%20replacement.png)
 
 ### 12. Delete 
 Deletes specified text or a portion of the text.
 
-![Delete](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Delete](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/Delete.png)
 
 ### 14. Cut 
 Cuts a portion of the text and places it in the clipboard.
 
-![Cut](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Cut](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/Cut.png)
 
 ### 15. Copy 
 Copies a portion of the text to the clipboard without removing it from the document.
 
-![Copy](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Copy](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/Copy.png)
 
 ### 16. Paste 
 Pastes the text from the clipboard into the document at the specified position.
 
-![Paste](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Paste](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/Paste.png)
 
 ### 17. Undo 
 Reverts the last change made to the document.
-
-![Undo](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
-
 ### 18. Redo 
 Reapplies a change that was undone.
 
-![Redo](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Undo/Redo](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/Undoredo%20(part1).png)
+![Undo/Redo](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/Undoredo(part2).png)
 
 ## Additional Commands
 
 ### 19. Display Clipboard Content
 Displays the current contents of the clipboard.
 
-![Display Clipboard Content](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Display Clipboard Content](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/clipboard.png)
 
 ### 20/21. Display Redo/Undo Stack 
 Shows the history of changes that can be undone.
 
-![Display Undo Stack](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Display Undo/Redo Stack](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Screenshots%20of%20commands%20work/undoredo(stack).png)
 
 
 ## Combined Task Examples
@@ -226,8 +224,8 @@ Shows the history of changes that can be undone.
 6. Copy word "code"
 7. Paste it in the end of the sentence
 
-![Test 1 - Step 1](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/Test1(1%20picture).png)
-![Test 1 - Step 2](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test1(2%20picture).png)
+![Test 1 - Step 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/1%20task%20(1).png)
+![Test 1 - Step 2](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/1%20task%20(2).png)
 
 ### Second Combined Task
 
@@ -241,7 +239,8 @@ Shows the history of changes that can be undone.
 7. Redo 1 time
 8. Print text
 
-![Test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test2.png)
+![Test 2 - Step 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/2%20task%20(1).png)![Test 2 - Step 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/2%20task%20(1).png)
+![Test 2 - Step 2](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/2%20task%20(2).png)
 
 ### Third Combined Task
 
@@ -255,8 +254,8 @@ Shows the history of changes that can be undone.
 8. Paste it somewhere
 9. Print
 
-![Test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test3(1%20picture).png)
-![Test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%203(2%20ptcture).png)
+![Test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%203%20(1).png)
+![Test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%203%20(2).png)
 
 ### Fourth Combined Task
 
@@ -265,12 +264,14 @@ Shows the history of changes that can be undone.
 2. Insert text at line 5
 3. Switch to the second line
 4. Append more text
-5. Undo 1 time
-6. Print text
-7. Redo 1 time
-8. Print text
+5. Print text
+6. Undo 1 time
+7. Print text
+8. Redo 1 time
+9. Print text
 
-![Test 4](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test4.png)
+![Test 4](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/4%20task%20(1).png)
+![Test 4](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/4%20task%20(2).png)
 
 ### Fifth Combined Task
 
@@ -278,7 +279,7 @@ Shows the history of changes that can be undone.
 1. Start a new line
 2. Append the words "I have a lab to do this week"
 3. Cut word "lab"
-4. Insert "tset " between "a" and "to" (index 1 9)
+4. Insert "test " between "a" and "to" (index 1 9)
 5. Delete last word
 6. Append "day"
 7. Print text
@@ -287,8 +288,9 @@ Shows the history of changes that can be undone.
 10. Undo
 11. Print
 
-![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%205(picture1).png)
-![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test5(picture%202).png)
+![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%205%20(1).png)
+![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%205%20(2).png)
+![Test 5](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%205%20(3).png)
 
 ### Sixth Combined Task
 
@@ -298,11 +300,12 @@ Shows the history of changes that can be undone.
 3. Replace in the middle something
 4. Print
 5. Delete 
-6. Copy as much as you can
-7. Paste it
-8. Print
-9. Exit
+6. Print
+7. Copy as much as you can
+8. Paste it
+9. Print
 
-![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%206%20(picture%201).png)
-![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/master/Tests/test%206(picture%202).png)
+
+![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(2).png)
 
