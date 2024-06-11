@@ -273,20 +273,19 @@ public:
 
     void Print() {
         for (int i = 0; i < lines; ++i) {
-            for (int j = 0; j <= strlen(text[i]); ++j) {
+            int len = strlen(text[i]);
+            for (int j = 0; j <= len; ++j) {
                 if (i == cursor.line && j == cursor.index) {
                     std::cout << "*";
                 }
-                if (j < strlen(text[i])) {
+                if (j < len) {
                     std::cout << text[i][j];
-                }
-                else {
-                    std::cout << " ";
                 }
             }
             std::cout << std::endl;
         }
 
+        // Handle case where cursor is beyond the current lines
         if (cursor.line >= lines) {
             for (int i = lines; i <= cursor.line; ++i) {
                 if (i == cursor.line) {
@@ -376,7 +375,7 @@ public:
         }
 
         for (int i = currentLength; i >= index; i--) {
-            text[line][i + newLength] = text[index][i];
+            text[line][i + newLength] = text[line][i];
         }
 
         for (int i = 0; i < newLength; i++) {
@@ -999,6 +998,10 @@ class Command
         }
         editor->MoveCursor(line, index);
     }
+    static void SeeCurrentCursorPosition(TextEditor* editor)
+    {
+        std::cout << "Your cursor is at line " << editor->cursor.line << " and index " << editor->cursor.index << std::endl;
+    }
 
 
 public:
@@ -1084,7 +1087,9 @@ public:
         case 22:
             MoveCursorUser(editor);
             break;
-
+        case 23:
+            SeeCurrentCursorPosition(editor);
+            break;
         default:
             std::cout << "The command is not implemented. Type '9' for help." << std::endl;
         }

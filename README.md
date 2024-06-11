@@ -307,40 +307,79 @@ Shows the history of changes that can be undone.
 ![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
 ![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(2).png)
 
+# Cursor feature
+I have implemented a cursor feature that tracks your current position in the text by line index. With this feature, you no longer need to specify the line and index when performing various commands.
+However, you must first move the cursor to your desired position using Command 22. To find out the current position of the cursor, use Command 23. 
+The cursor is represented by the "*" symbol.
 
-# Cursor Test
+### 22. Move the cursor
+![Command 22](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(2).png)
+
+### 23. See the location of the cursor
+![Command 22](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(2).png)
+
+
+## Cursor Test
 
 ### First Combined Task
 **Steps**
 1. Append to end a phrase "Good morning kids!"
 2. Print
-3. Replace "Good" with "Nice" 
-4. Print
-5. Delete "kids"
-6. Print
-7. Copy first word
-8. Paste it in the end
+3. Move the cursor to the begining (0 0)
+4. Replace "Good" with "Nice" 
+5. Print
+6. Move the cursor (0 13) (in order to delete "kids")
+7. Print to check the position of cursor
+8. Delete "kids"
 9. Print
+10. Move the cursor to the beginning (0 0)
+11. Copy first word
+12. Use command 19 to see the contents of your clipboard ("Nice" should be there)
+13. Move the cursor to the end of the phrase (0 14)
+14. Paste it in the end
+15. Print
+
+![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
 
 ### Second Combined Task
+
 **Steps:**
 1. Append text "Love you all"
 2. Start a new line
-3. Append more text "And you"
-4. Replace "And" with "Bad"
+3. Append text "And you"
+4. Move the cursor (1 0)
+5. Replace "And" with "But"
 5. Print text
 6. Undo 2 times
-7. Redo 1 time
-8. Print text
+7. Print
+8. Redo 1 time
+9. Print text
+
+![Cursor test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Cursor test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
 
 ### Third Combined Task
 
 **Steps:**
 1. Append text "Today is a good day"
-2. Cut word "Today"
-3. Print
+2. Move the cursor (0 0)
+3. Cut word "Today"
 4. Display content of the clipboard
-5. Paste in the end
-7. Copy word "day"
-8. Paste it somewhere
-9. Print
+5. Print
+6. Move the cursor (0 14)
+7. Paste it
+8. Print
+9. Move the cursor (0 14)
+10. Insert " "
+11. Move the cursor (0 11)
+12. Copy word "day"
+13. Display content of the clipboard
+14. Move the cursor (0 3)
+15. Paste 
+16. Print
+
+![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
