@@ -736,7 +736,8 @@ class Command
             "17 - undo\n"
             "18 - redo\n"
             "20/21 - display history of text improvement\n"
-            "22 - move your cursor\n";
+            "22 - move your cursor\n"
+            "23 - see the location of your cursor";
     }
     static void LPSArray(char pattern[], size_t patternLength, int* lps)
     {
