@@ -313,10 +313,10 @@ However, you must first move the cursor to your desired position using Command 2
 The cursor is represented by the "*" symbol.
 
 ### 22. Move the cursor
-![Command 22](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(2).png)
+![Command 22](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Screenshots%20of%20commands%20work/move%20the%20cursor.png)
 
 ### 23. See the location of the cursor
-![Command 22](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(2).png)
+![Command 23](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Screenshots%20of%20commands%20work/see%20position.png)
 
 
 ## Cursor Test
@@ -339,9 +339,9 @@ The cursor is represented by the "*" symbol.
 14. Paste it in the end
 15. Print
 
-![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
-![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
-![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Tests/cursor%201%20(1).png)
+![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Tests/cursor%201%20(2).png)
+![Cursor test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Tests/cursor%201%20(3).png)
 
 ### Second Combined Task
 
@@ -357,8 +357,8 @@ The cursor is represented by the "*" symbol.
 8. Redo 1 time
 9. Print text
 
-![Cursor test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
-![Cursor test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Cursor test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Tests/cursor%202%20(1).png)
+![Cursor test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Tests/cursor%202%20(2).png)
 
 ### Third Combined Task
 
@@ -380,6 +380,6 @@ The cursor is represented by the "*" symbol.
 15. Paste 
 16. Print
 
-![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
-![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
-![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
+![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Tests/cursor%203%20(1).png)
+![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Tests/cursor%203%20(2).png)
+![Cursor test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/CURSOR2/Tests/cursor%203%20(3).png)
