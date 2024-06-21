@@ -634,10 +634,10 @@ class Command
 {
     static void SaveToFile(TextEditor* editor, const char* fileName)
     {
-        std::ofstream file(fileName);
+        ofstream file(fileName);
         if (!file.is_open())
         {
-            std::cout << "This file cannot be opened or something bad happened to it!" << std::endl;
+            cout << "This file cannot be opened or something bad happened to it!" << std::endl;
             return;
         }
 
@@ -650,7 +650,7 @@ class Command
         }
 
         file.close();
-        std::cout << "Text has been saved successfully!" << std::endl;
+        cout << "Text has been saved successfully!" << endl;
     }
     static void LoadFromFile(TextEditor* editor, char fileName[]) {
         FILE* file = fopen(fileName, "r");
@@ -736,7 +736,9 @@ class Command
             "18 - redo\n"
             "20/21 - display history of text improvement\n"
             "22 - enter some text to encrypt\n"
-            "23 - enter some text to decrypt\n";
+            "23 - enter some text to decrypt\n"
+            "24 - encrypt a file\n"
+            "25 - decrypt a file\n";
 
 
     }
@@ -1020,6 +1022,37 @@ class Command
 
     }
 
+    static void DoCommand24or25(TextEditor* editor, UserInput* userInput, bool encrypt, CaesarCipher cipher, int* key)
+    {
+
+        cout << "Enter a file path: " << endl;
+        userInput->TakeUserInput();
+        LoadFromFile(editor, userInput->text);
+        if (!AskUserToEnterKey(key))
+        {
+            return;
+        }
+        for (int i = 0; i < editor->lines; i++)
+        {
+            if (encrypt)
+            {
+                editor->text[i] = cipher.Encrypt(editor->text[i], *key);
+                 
+            }
+            else
+            {
+                editor->text[i] = cipher.Decrypt(editor->text[i], *key);
+            }
+        }
+        userInput->text[0] = '\0';
+        cout << "Enter a file path, where you want to save new text: " << endl;
+        userInput->TakeUserInput();
+        SaveToFile(editor, userInput->text);
+
+    }
+  
+    
+
 public:
     int command;
 
@@ -1031,7 +1064,7 @@ public:
         bool needCut = false;
         bool encrypt = true; 
         CaesarCipher cipher;
-
+        int key;
         switch (command) {
         
         case 0:
@@ -1108,6 +1141,13 @@ public:
         case 23:
             encrypt = false;
             DoCommand22or23(&userInput, encrypt, cipher);
+            break;
+        case 24:
+            DoCommand24or25(editor, &userInput, encrypt, cipher, &key);
+            break;
+        case 25:
+            encrypt = false;
+            DoCommand24or25(editor, &userInput, encrypt, cipher, &key);
             break;
         default:
             std::cout << "The command is not implemented. Type '9' for help." << std::endl;
