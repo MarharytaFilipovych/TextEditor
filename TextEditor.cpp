@@ -7,7 +7,9 @@
 #define INITIAL_SIZE_OF_ROW 100
 #define INITIAL_SIZE_OF_LINES 20
 #include <string> 
-
+#include <windows.h>
+using namespace std;
+#undef max
 class CommandHistory
 {
 public:
@@ -407,7 +409,7 @@ public:
             DeleteSymbols(line, index, number, currentLength, false);
             if (user)
             {
-                CommandHistory commandInfo(15, line, index, number, textToBuffer, nullptr);
+                CommandHistory commandInfo(14, line, index, number, textToBuffer, nullptr);
                 stackUndo.PushToStack(&commandInfo);
             }
         }
@@ -499,6 +501,66 @@ public:
         symbolsPerLine = INITIAL_SIZE_OF_ROW;
         text = createArray(INITIAL_SIZE_OF_LINES, INITIAL_SIZE_OF_ROW);
         currentLine = 0;
+    }
+};
+class CaesarCipher
+{
+    HINSTANCE handle;
+    typedef char* (*encrypt_ptr_t)(char*, int);
+    typedef char* (*decrypt_ptr_t)(char*, int);
+    encrypt_ptr_t encrypt_ptr;
+    decrypt_ptr_t decrypt_ptr;
+    bool LoadLibrary()
+    {
+        handle = ::LoadLibrary(TEXT("C:\\Margo\\CaesarCodeAndLibrary\\Library\\Caesar.dll"));
+        if (handle == nullptr || handle == INVALID_HANDLE_VALUE)
+        {
+            cout << "Lib not found" << endl;
+            return false;
+        }
+        return true;
+    }
+    bool LoadFunctions() {
+        encrypt_ptr = (encrypt_ptr_t)GetProcAddress(handle, "Encrypt");
+        if (encrypt_ptr == nullptr)
+        {
+            cout << "Encrypt function not found." << endl;
+            FreeLibrary(handle);
+            return false;
+        }
+        decrypt_ptr = (encrypt_ptr_t)GetProcAddress(handle, "Decrypt");
+        if (decrypt_ptr == nullptr)
+        {
+            cout << "Encrypt function not found." << endl;
+            FreeLibrary(handle);
+            return false;
+        }
+        return true;
+    }
+public:
+    
+    char* Encrypt(char* text, int key)
+    {
+        return encrypt_ptr(text, key);
+    }
+    char* Decrypt(char* text, int key)
+    {
+        return decrypt_ptr(text, key);
+    }
+
+    CaesarCipher() : handle(nullptr), encrypt_ptr(nullptr), decrypt_ptr(nullptr)
+    {
+       
+        if (!(LoadLibrary() && LoadFunctions()))
+        {
+            cout << "Failed to load library or functions." << endl;
+        }
+    }
+    ~CaesarCipher()
+    {
+        if (handle != nullptr) {
+            FreeLibrary(handle);
+        }
     }
 };
 
@@ -672,7 +734,9 @@ class Command
             "16 - paste\n"
             "17 - undo\n"
             "18 - redo\n"
-            "20/21 - display history of text improvement\n";
+            "20/21 - display history of text improvement\n"
+            "22 - enter some text to encrypt\n"
+            "23 - enter some text to decrypt\n";
 
 
     }
@@ -920,6 +984,41 @@ class Command
         }
     }
 
+    static bool AskUserToEnterKey(int* key) {
+        cout << "Enter a key (0 to 25): " << endl;
+        if (!(cin >> *key)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid input!" << endl;
+            return false;
+        }
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+        if (*key < 0 || *key > 25) {
+            cout << "Invalid range!" << endl;
+            return false;
+        }
+        return true;
+    }
+    static void DoCommand22or23(UserInput* userInput, bool encrypt, CaesarCipher cipher)
+    {
+        int key;
+        cout << "Enter text: " << endl;
+        userInput->TakeUserInput();
+        if (!AskUserToEnterKey(&key))
+        {
+            return;
+        }
+        if (encrypt) {
+            cout << "Encrypted: " << cipher.Encrypt(userInput->text, key) << endl;;
+
+        }
+        else
+        {
+            cout << "Decrypted:" <<  cipher.Decrypt(userInput->text, key) << endl;
+        }
+
+    }
 
 public:
     int command;
@@ -930,6 +1029,8 @@ public:
     static void ProcessCommand(int command, TextEditor* editor, Clipboard* clipboard) {
         UserInput userInput;
         bool needCut = false;
+        bool encrypt = true; 
+        CaesarCipher cipher;
 
         switch (command) {
         
@@ -1000,6 +1101,13 @@ public:
             break;
         case 21:
             editor->stackUndo.DisplayContentsOfStack();
+            break;
+        case 22:
+            DoCommand22or23(&userInput, encrypt, cipher);
+            break;
+        case 23:
+            encrypt = false;
+            DoCommand22or23(&userInput, encrypt, cipher);
             break;
         default:
             std::cout << "The command is not implemented. Type '9' for help." << std::endl;
