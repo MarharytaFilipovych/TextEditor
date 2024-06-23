@@ -1022,32 +1022,32 @@ class Command
 
     }
 
-    static void DoCommand24or25(TextEditor* editor, UserInput* userInput, bool encrypt, CaesarCipher cipher, int* key)
+    static void DoCommand24or25(TextEditor* tempEditor, UserInput* userInput, bool encrypt, CaesarCipher cipher, int* key)
     {
 
         cout << "Enter a file path: " << endl;
         userInput->TakeUserInput();
-        LoadFromFile(editor, userInput->text);
+        LoadFromFile(tempEditor, userInput->text);
         if (!AskUserToEnterKey(key))
         {
             return;
         }
-        for (int i = 0; i < editor->lines; i++)
+        for (int i = 0; i < tempEditor->lines; i++)
         {
             if (encrypt)
             {
-                editor->text[i] = cipher.Encrypt(editor->text[i], *key);
+                tempEditor->text[i] = cipher.Encrypt(tempEditor->text[i], *key);
                  
             }
             else
             {
-                editor->text[i] = cipher.Decrypt(editor->text[i], *key);
+                tempEditor->text[i] = cipher.Decrypt(tempEditor->text[i], *key);
             }
         }
         userInput->text[0] = '\0';
         cout << "Enter a file path, where you want to save new text: " << endl;
         userInput->TakeUserInput();
-        SaveToFile(editor, userInput->text);
+        SaveToFile(tempEditor, userInput->text);
 
     }
   
@@ -1059,7 +1059,7 @@ public:
     Command(int newCommand)
         :command(newCommand) {}
 
-    static void ProcessCommand(int command, TextEditor* editor, Clipboard* clipboard) {
+    static void ProcessCommand(int command, TextEditor* editor, Clipboard* clipboard, TextEditor* tempEditor) {
         UserInput userInput;
         bool needCut = false;
         bool encrypt = true; 
@@ -1143,11 +1143,11 @@ public:
             DoCommand22or23(&userInput, encrypt, cipher);
             break;
         case 24:
-            DoCommand24or25(editor, &userInput, encrypt, cipher, &key);
+            DoCommand24or25(tempEditor, &userInput, encrypt, cipher, &key);
             break;
         case 25:
             encrypt = false;
-            DoCommand24or25(editor, &userInput, encrypt, cipher, &key);
+            DoCommand24or25(tempEditor, &userInput, encrypt, cipher, &key);
             break;
         default:
             std::cout << "The command is not implemented. Type '9' for help." << std::endl;
@@ -1159,6 +1159,8 @@ int main() {
     std::cout << "Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)" << std::endl;
     Clipboard clipboard;   
     TextEditor editor;
+    TextEditor tempEditor;
+
     int command;
     do {
         std::cout << "Enter command: ";
@@ -1173,7 +1175,7 @@ int main() {
             break;
         }
         Command commandUser(command);
-        commandUser.ProcessCommand(commandUser.command, &editor, &clipboard);
+        commandUser.ProcessCommand(commandUser.command, &editor, &clipboard, &tempEditor);
     } while (true);
     return 0;
 }
