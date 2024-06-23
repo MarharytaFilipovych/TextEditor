@@ -10,6 +10,7 @@
 #include <windows.h>
 using namespace std;
 #undef max
+#define CHUNK_SIZE 128
 class CommandHistory
 {
 public:
@@ -625,12 +626,14 @@ public:
 
 class Command
 {
+    
+
     static void SaveToFile(TextEditor* editor, const char* fileName)
     {
-        ofstream file(fileName);
+        std::ofstream file(fileName, std::ios::out | std::ios::binary);
         if (!file.is_open())
         {
-            cout << "This file cannot be opened or something bad happened to it!" << std::endl;
+            std::cout << "This file cannot be opened or something bad happened to it!" << std::endl;
             return;
         }
 
@@ -638,12 +641,20 @@ class Command
         {
             if (editor->text[i] != nullptr)
             {
-                file << editor->text[i] << '\n';
+                size_t len = std::strlen(editor->text[i]);
+                size_t index = 0;
+                while (index < len)
+                {
+                    size_t chunk_size = min(CHUNK_SIZE, len - index);
+                    file.write(editor->text[i] + index, chunk_size);
+                    index += chunk_size;
+                }
+                file << '\n';
             }
         }
 
         file.close();
-        cout << "Text has been saved successfully!" << endl;
+        std::cout << "Text has been saved successfully!" << std::endl;
     }
     static void LoadFromFile(TextEditor* editor, char fileName[]) {
         FILE* file = fopen(fileName, "r");
