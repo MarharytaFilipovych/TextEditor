@@ -630,10 +630,10 @@ class Command
 
     static void SaveToFile(TextEditor* editor, const char* fileName)
     {
-        std::ofstream file(fileName, std::ios::out | std::ios::binary);
+        ofstream file(fileName, ios::out |  ios::binary);
         if (!file.is_open())
         {
-            std::cout << "This file cannot be opened or something bad happened to it!" << std::endl;
+            cout << "This file cannot be opened or something bad happened to it!" << endl;
             return;
         }
 
@@ -641,8 +641,8 @@ class Command
         {
             if (editor->text[i] != nullptr)
             {
-                size_t len = std::strlen(editor->text[i]);
-                size_t index = 0;
+                size_t len = strlen(editor->text[i]);
+                int index = 0;
                 while (index < len)
                 {
                     size_t chunk_size = min(CHUNK_SIZE, len - index);
@@ -652,10 +652,10 @@ class Command
                 file << '\n';
             }
         }
-
         file.close();
-        std::cout << "Text has been saved successfully!" << std::endl;
+        cout << "Text has been saved successfully!" << endl;
     }
+
     static void LoadFromFile(TextEditor* editor, char fileName[]) {
         FILE* file = fopen(fileName, "r");
         if (file == nullptr) {
