@@ -10,6 +10,7 @@
 #include <windows.h>
 using namespace std;
 #undef max
+#define CHUNK_SIZE 128
 class CommandHistory
 {
 public:
@@ -1014,7 +1015,7 @@ class Command
             return;
         }
         if (encrypt) {
-            cout << "Encrypted: " << Encrypt(userInput->text, key) << endl;;
+            cout << "Encrypted: " << Encrypt(userInput->text, key) << endl;
 
         }
         else
@@ -1023,33 +1024,57 @@ class Command
         }
 
     }
-
-    static void DoCommand24or25(TextEditor* tempEditor, UserInput* userInput, bool encrypt,  int* key)
+    static void ReadAndWriteChunks(ofstream &saveFile, ifstream &loadFile, int* key, bool encrypt)
     {
+        char* chunk = new char[CHUNK_SIZE + 1];
+        while (loadFile.read(chunk, CHUNK_SIZE) || loadFile.gcount() > 0) {
+            streamsize bytesRead = loadFile.gcount();
+            chunk[bytesRead] = '\0';
+            if (encrypt) {
+                saveFile.write(Encrypt(chunk, *key), bytesRead);
+            }
+            else {
+                saveFile.write(Decrypt(chunk, *key), bytesRead);
+            }
+        }
+        delete[] chunk;
+    }
+    static void CloseFiles(ofstream& saveFile, ifstream& loadFile)
+    {
+        if (loadFile.bad()) {
+            cout << "Error reading from file!" << endl;
+        }
+        if (saveFile.bad()) {
+            cout << "Error writing to file!" << endl;
+        }
+
+        loadFile.close();
+        saveFile.close();
+   }
+
+    static void DoCommand24or25(TextEditor* tempEditor, UserInput* userInput, bool encrypt, int* key) {
         cout << "Enter a file path: " << endl;
         userInput->TakeUserInput();
-        LoadFromFile(tempEditor, userInput->text);
-        if (!AskUserToEnterKey(key))
-        {
+        ifstream loadFile(userInput->text, ios::binary);
+        if (!loadFile.is_open()) {
+            cout << "Error opening file!" << endl;
             return;
         }
-        for (int i = 0; i < tempEditor->lines; i++)
-        {
-            if (encrypt)
-            {
-                tempEditor->text[i] = Encrypt(tempEditor->text[i], *key);
-                 
-            }
-            else
-            {
-                tempEditor->text[i] = Decrypt(tempEditor->text[i], *key);
-            }
+
+        if (!AskUserToEnterKey(key)) {
+            return;
         }
         userInput->text[0] = '\0';
         cout << "Enter a file path, where you want to save new text: " << endl;
         userInput->TakeUserInput();
-        SaveToFile(tempEditor, userInput->text);
+        ofstream saveFile(userInput->text, ios::binary);
+        if (!saveFile.is_open()) {
+            cout << "Error opening file!" << endl;
+            return;
+        }
 
+        ReadAndWriteChunks(saveFile, loadFile, key, encrypt);
+        CloseFiles(saveFile, loadFile);
     }
   
     
