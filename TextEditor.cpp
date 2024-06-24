@@ -978,13 +978,15 @@ class Command
             std::cout << "Nothing more to undo." << std::endl;
         }
     }
-    static char* Encrypt(CaesarCipher* cipher, char* text, int key)
+    static char* Encrypt(char* text, int key)
     {
-        return cipher->encrypt_ptr(text, key);
+        CaesarCipher cipher;
+        return cipher.encrypt_ptr(text, key);
     }
-    static char* Decrypt(CaesarCipher* cipher, char* text, int key)
+    static char* Decrypt( char* text, int key)
     {
-        return cipher->decrypt_ptr(text, key);
+        CaesarCipher cipher;
+        return cipher.decrypt_ptr(text, key);
     }
     static bool AskUserToEnterKey(int* key) {
         cout << "Enter a key (0 to 25): " << endl;
@@ -1002,7 +1004,7 @@ class Command
         }
         return true;
     }
-    static void DoCommand22or23(UserInput* userInput, bool encrypt, CaesarCipher* cipher)
+    static void DoCommand22or23(UserInput* userInput, bool encrypt)
     {
         int key;
         cout << "Enter text: " << endl;
@@ -1012,19 +1014,18 @@ class Command
             return;
         }
         if (encrypt) {
-            cout << "Encrypted: " << Encrypt(cipher, userInput->text, key) << endl;;
+            cout << "Encrypted: " << Encrypt(userInput->text, key) << endl;;
 
         }
         else
         {
-            cout << "Decrypted:" <<  Decrypt(cipher, userInput->text, key) << endl;
+            cout << "Decrypted:" <<  Decrypt(userInput->text, key) << endl;
         }
 
     }
 
-    static void DoCommand24or25(TextEditor* tempEditor, UserInput* userInput, bool encrypt, CaesarCipher* cipher, int* key)
+    static void DoCommand24or25(TextEditor* tempEditor, UserInput* userInput, bool encrypt,  int* key)
     {
-
         cout << "Enter a file path: " << endl;
         userInput->TakeUserInput();
         LoadFromFile(tempEditor, userInput->text);
@@ -1036,12 +1037,12 @@ class Command
         {
             if (encrypt)
             {
-                tempEditor->text[i] = Encrypt(cipher, tempEditor->text[i], *key);
+                tempEditor->text[i] = Encrypt(tempEditor->text[i], *key);
                  
             }
             else
             {
-                tempEditor->text[i] = Decrypt(cipher, tempEditor->text[i], *key);
+                tempEditor->text[i] = Decrypt(tempEditor->text[i], *key);
             }
         }
         userInput->text[0] = '\0';
@@ -1063,7 +1064,6 @@ public:
         UserInput userInput;
         bool needCut = false;
         bool encrypt = true; 
-        CaesarCipher cipher;
         int key;
         switch (command) {
         
@@ -1136,18 +1136,18 @@ public:
             editor->stackUndo.DisplayContentsOfStack();
             break;
         case 22:
-            DoCommand22or23(&userInput, encrypt, &cipher);
+            DoCommand22or23(&userInput, encrypt);
             break;
         case 23:
             encrypt = false;
-            DoCommand22or23(&userInput, encrypt, &cipher);
+            DoCommand22or23(&userInput, encrypt);
             break;
         case 24:
-            DoCommand24or25(tempEditor, &userInput, encrypt, &cipher, &key);
+            DoCommand24or25(tempEditor, &userInput, encrypt, &key);
             break;
         case 25:
             encrypt = false;
-            DoCommand24or25(tempEditor, &userInput, encrypt, &cipher, &key);
+            DoCommand24or25(tempEditor, &userInput, encrypt, &key);
             break;
         default:
             std::cout << "The command is not implemented. Type '9' for help." << std::endl;
