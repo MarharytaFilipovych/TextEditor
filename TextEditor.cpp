@@ -4,13 +4,13 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
-#define INITIAL_SIZE_OF_ROW 100
-#define INITIAL_SIZE_OF_LINES 20
+#define INITIAL_SIZE_OF_ROW 300
+#define INITIAL_SIZE_OF_LINES 1000
 #include <string> 
 #include <windows.h>
 using namespace std;
 #undef max
-#define CHUNK_SIZE 128
+#define CHUNK_SIZE 1024
 class CommandHistory
 {
 public:
@@ -657,43 +657,54 @@ class Command
     }
 
     static void LoadFromFile(TextEditor* editor, char fileName[]) {
-        FILE* file = fopen(fileName, "r");
-        if (file == nullptr) {
-            std::cout << "Error opening file. It looks like it does not exist!" << std::endl;
+        ifstream file(fileName, ios::binary);
+        if (!file.is_open()) {
+            cout << "Error opening file. It looks like it does not exist!" << endl;
             return;
         }
 
-        size_t bufferCapacity = INITIAL_SIZE_OF_ROW;
-        char* buffer = new char[INITIAL_SIZE_OF_ROW];
-        if (buffer == NULL) {
-            std::cerr << "Memory allocation failed" << std::endl;
-            exit(EXIT_FAILURE);
-        }
+        char buffer[CHUNK_SIZE];
         editor->Clear();
+        string remainder;
 
-        while (fgets(buffer, bufferCapacity, file) != nullptr) {
-            while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
-                bufferCapacity += bufferCapacity;
-                char* temp = (char*)realloc(buffer, bufferCapacity * sizeof(char));
-                if (temp == nullptr) {
-                    std::cerr << "Memory allocation failed" << std::endl;
-                    exit(EXIT_FAILURE);
+        while (file) {
+            file.read(buffer, CHUNK_SIZE);
+            streamsize bytesRead = file.gcount();
+
+            string chunk(buffer, bytesRead);
+            chunk = remainder + chunk; 
+            remainder.clear(); 
+
+            size_t pos = 0;
+            while ((pos = chunk.find('\n')) != std::string::npos) {
+                string line = chunk.substr(0, pos);
+                char* text = new char[line.size() + 1];
+                strcpy(text, line.c_str());
+                editor->AppendToEnd(text, false);
+                delete[] text;
+
+                chunk.erase(0, pos + 1); 
+
+                if (editor->currentLine >= editor->lines) {
+                    editor->MakeMoreLines(editor->currentLine + 1);
                 }
-                buffer = temp;
-                fgets(buffer + strlen(buffer), bufferCapacity - strlen(buffer), file);
+                editor->currentLine++;
             }
-            buffer[strcspn(buffer, "\n")] = '\0';
 
-            if (editor->currentLine >= editor->lines) {
-                editor->MakeMoreLines(editor->currentLine + 1);
-            }
-            editor->AppendToEnd(buffer, false);
-            editor->currentLine++;
+            
+            remainder = chunk;
         }
-        delete[] buffer;
-        fclose(file);
-        std::cout << "File has been loaded successfully!" << std::endl;
 
+       
+        if (!remainder.empty()) {
+            char* text = new char[remainder.size() + 1];
+            strcpy(text, remainder.c_str());
+            editor->AppendToEnd(text, false);
+            delete[] text;
+        }
+
+        file.close();
+        cout << "File has been loaded successfully!" << endl;
     }
     static void LineToModify(TextEditor* editor)
     {
