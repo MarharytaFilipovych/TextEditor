@@ -275,25 +275,30 @@ public:
     void MakeLineLonger(size_t currentLength, size_t newLength)
     {
         size_t newCapacity = currentLength + newLength + 1;
-        char* temp = (char*)realloc(text[currentLine], newCapacity * sizeof(char));
+        char* temp = new char[newCapacity];
         if (temp == nullptr) {
-           cerr << "Memory allocation failed" << endl;
+            cerr << "Memory allocation failed" << endl;
             exit(EXIT_FAILURE);
         }
+        strcpy(temp, text[currentLine]);
+        delete[] text[currentLine];       
         text[currentLine] = temp;
         symbolsPerLine = newCapacity;
     }
     void MakeMoreLines(int line) {
         size_t newLinesCapacity = line + 1;
-        char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
+        char** temp = new char* [newLinesCapacity];
         if (temp == nullptr)
         {
-           cerr << "Memory allocation failed" << endl;
+            cerr << "Memory allocation failed" << endl;
             exit(EXIT_FAILURE);
         }
+        copy(text, text + lines, temp);
+        
+        delete[] text;
         text = temp;
         for (size_t i = lines; i < newLinesCapacity; i++) {
-            text[i] = (char*)malloc(symbolsPerLine * sizeof(char));
+            text[i] = new char[symbolsPerLine]; 
             if (text[i] == nullptr)
             {
                 cerr << "Memory allocation failed" <<endl;
@@ -487,13 +492,13 @@ public:
 }
     int ChooseLineIndex(int* line, int* index) {
         cout << "Choose line and index:" << endl;
-        if (scanf("%d %d", line, index) != 2 || *line < 0 || *index < 0) {
+        if (!(cin >> *line >> *index) != 2 || *line < 0 || *index < 0) {
             cout << "Invalid input" << endl;
-
-            while (getchar() != '\n');
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             return 0;
         }
-        while (getchar() != '\n');
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         return 1;
     }
     void Clear(bool user) {
@@ -566,23 +571,27 @@ class UserInput
 {
     void MakeUserArrayLonger() {
         size_t newCapacity = capacity * 2;
-        char* temp = (char*)realloc(text, newCapacity * sizeof(char));
+        char* temp = new char [newCapacity];
         if (temp == NULL)
         {
             cerr << "Memory allocation failed" << endl;
             exit(EXIT_FAILURE);
         }
+        strcpy(temp, text);
+        delete[] text;
         text = temp;
         capacity = newCapacity;
     }
     void AdjustNeededSizeForUserArray(size_t realLength)
     {
-        char* temp = (char*)realloc(text, (realLength + 1) * sizeof(char));
+        char* temp = new char[realLength + 1];
         if (temp == nullptr)
         {
             cerr << "Memory allocation failed" << endl;
             exit(EXIT_FAILURE);
         }
+        strcpy(temp, text);      
+        delete[] text;
         text = temp;
         capacity = realLength + 1;
     }
@@ -655,47 +664,32 @@ class Command
             editor->stackUndo.PushToStack(&commandInfo);
         }
     }
-    static void LoadFromFile(TextEditor* editor, char fileName[], bool user) {
-        FILE* file = fopen(fileName, "r");
-        if (file == nullptr) {
+    static void LoadFromFile(TextEditor* editor, const char* fileName, bool user) {
+        ifstream file(fileName);
+        if (!file.is_open()) {
             cout << "Error opening file. It looks like it does not exist!" << endl;
             return;
         }
-
-        size_t bufferCapacity = INITIAL_SIZE_OF_ROW;
-        char* buffer = new char[bufferCapacity];
-        if (buffer == nullptr) {
-            cerr << "Memory allocation failed" << endl;
-            exit(EXIT_FAILURE);
-        }
-
         editor->Clear(false);
-
-        while (fgets(buffer, bufferCapacity, file) != nullptr) {
-            while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
-                bufferCapacity += INITIAL_SIZE_OF_ROW;
-                char* temp = new char[bufferCapacity];
-                if (temp == nullptr) {
-                    cerr << "Memory allocation failed" << endl;
-                    exit(EXIT_FAILURE);
-                }
-                strcpy(temp, buffer);
-                delete[] buffer;
-                buffer = temp;
-                fgets(buffer + strlen(buffer), bufferCapacity - strlen(buffer), file);
-            }
-            buffer[strcspn(buffer, "\n")] = '\0';
-
+        string line;
+        while (getline(file, line)) {
             if (editor->currentLine >= editor->lines) {
                 editor->MakeMoreLines(editor->currentLine + 1);
             }
-            editor->AppendToEnd(buffer, false);
+            char* mline = new char[line.size() + 1];
+            strcpy(mline, line.c_str());
+            editor->AppendToEnd(mline, false);
+            delete[] mline;
             editor->currentLine++;
         }
 
-        delete[] buffer;
-        fclose(file);
-        cout << "Your file was loaded successfully!" << endl;
+        file.close();
+        cout << "File has been loaded successfully!" << endl;
+
+        if (user) {
+            CommandHistory commandInfo(7, 0, 0, 0, nullptr, nullptr);
+            editor->stackUndo.PushToStack(&commandInfo);
+        }
     }
     static void LineToModify(TextEditor* editor)
     {

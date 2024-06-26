@@ -1,0 +1,42 @@
+static void LoadFromFile(TextEditor* editor, char fileName[], bool user) {
+    FILE* file = fopen(fileName, "r");
+    if (file == nullptr) {
+        cout << "Error opening file. It looks like it does not exist!" << endl;
+        return;
+    }
+
+    size_t bufferCapacity = INITIAL_SIZE_OF_ROW;
+    char* buffer = new char[bufferCapacity];
+    if (buffer == nullptr) {
+        cerr << "Memory allocation failed" << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    editor->Clear(false);
+
+    while (fgets(buffer, bufferCapacity, file) != nullptr) {
+        while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
+            bufferCapacity += INITIAL_SIZE_OF_ROW;
+            char* temp = new char[bufferCapacity];
+            if (temp == nullptr) {
+                cerr << "Memory allocation failed" << endl;
+                exit(EXIT_FAILURE);
+            }
+            strcpy(temp, buffer);
+            delete[] buffer;
+            buffer = temp;
+            fgets(buffer + strlen(buffer), bufferCapacity - strlen(buffer), file);
+        }
+        buffer[strcspn(buffer, "\n")] = '\0';
+
+        if (editor->currentLine >= editor->lines) {
+            editor->MakeMoreLines(editor->currentLine + 1);
+        }
+        editor->AppendToEnd(buffer, false);
+        editor->currentLine++;
+    }
+
+    delete[] buffer;
+    fclose(file);
+    cout << "Your file was loaded successfully!" << endl;
+}
