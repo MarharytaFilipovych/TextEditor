@@ -655,33 +655,47 @@ class Command
             editor->stackUndo.PushToStack(&commandInfo);
         }
     }
-    static void LoadFromFile(TextEditor* editor, const char* fileName, bool user) {
-        ifstream file(fileName);
-        if (!file.is_open()) {
+    static void LoadFromFile(TextEditor* editor, char fileName[], bool user) {
+        FILE* file = fopen(fileName, "r");
+        if (file == nullptr) {
             cout << "Error opening file. It looks like it does not exist!" << endl;
             return;
         }
 
+        size_t bufferCapacity = INITIAL_SIZE_OF_ROW;
+        char* buffer = new char[bufferCapacity];
+        if (buffer == nullptr) {
+            cerr << "Memory allocation failed" << endl;
+            exit(EXIT_FAILURE);
+        }
+
         editor->Clear(false);
 
-        string line;
-        while (getline(file, line)) {
+        while (fgets(buffer, bufferCapacity, file) != nullptr) {
+            while (buffer[strlen(buffer) - 1] != '\n' && !feof(file)) {
+                bufferCapacity += INITIAL_SIZE_OF_ROW;
+                char* temp = new char[bufferCapacity];
+                if (temp == nullptr) {
+                    cerr << "Memory allocation failed" << endl;
+                    exit(EXIT_FAILURE);
+                }
+                strcpy(temp, buffer);
+                delete[] buffer;
+                buffer = temp;
+                fgets(buffer + strlen(buffer), bufferCapacity - strlen(buffer), file);
+            }
+            buffer[strcspn(buffer, "\n")] = '\0';
+
             if (editor->currentLine >= editor->lines) {
                 editor->MakeMoreLines(editor->currentLine + 1);
             }
-            char* mline = new char[line.size()];
-            strcpy(mline, line.c_str());
-            editor->AppendToEnd(mline, false);
+            editor->AppendToEnd(buffer, false);
             editor->currentLine++;
         }
 
-        file.close();
-        cout << "File has been loaded successfully!" << endl;
-        if (user)
-        {
-            CommandHistory commandInfo(7, 0, 0, 0, nullptr, nullptr);
-            editor->stackUndo.PushToStack(&commandInfo);
-        }
+        delete[] buffer;
+        fclose(file);
+        cout << "Your file was loaded successfully!" << endl;
     }
     static void LineToModify(TextEditor* editor)
     {
