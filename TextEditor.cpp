@@ -635,7 +635,7 @@ class Command
         ofstream file(fileName);
         if (!file.is_open())
         {
-            cout << "This file cannot be opened or something bad happened to it!" << std::endl;
+            cout << "This file cannot be opened or something bad happened to it!" << endl;
             return;
         }
 
