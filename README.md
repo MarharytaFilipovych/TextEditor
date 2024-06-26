@@ -309,3 +309,71 @@ Shows the history of changes that can be undone.
 ![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(1).png)
 ![Test 6](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-2/Tests/task%206%20(2).png)
 
+# Assignment 3
+
+Now the text editor has 25 commands in its arsenal. Hence, I added 4 new commands:
+
+### 22. Enter some random text with a key (from 0 to 25) to encrypt it:
+![Command 22](link_to_image)
+
+### 23. Enter some random encrypted text with a key (from 0 to 25) to decrypt it:
+![Command 23](link_to_image)
+
+### 24. Input a path of a file, whose content you wish to encrypt and save this work in a separate file by entering its path:
+![Command 24](link_to_image)
+
+### 25. Input a path of a file, whose content you wish to decrypt and save this work in a separate file by entering its path:
+![Command 25](link_to_image)
+
+These commands were implemented using my own dynamic library, where I developed procedures for encryption and decryption functionalities.
+
+## Combined Task Examples
+
+### First Combined Task
+
+**Steps:**
+1. Use **Command 22 (encryption)** to write `"I hate sitting on my couch because it is uncomfortable"`.
+2. Try to use **key 67**.
+3. Try again to use the same command with the same text and **key 13**.
+4. Now, when there is an encrypted version, use **Command 23 (decryption)** and enter this encrypted text with the same **key 13**.
+
+![Test 1]()
+
+### Second Combined Task
+
+**Steps:**
+1. Use **Command 24**:
+   - Load file: `heart.txt`
+   - Key: 17
+   - Save file: `encryptedheart.txt`
+2. Use **Command 25**:
+   - Load file: `encryptedheart.txt`
+   - Key: 17
+   - Save file: `decryptedheart.txt`
+
+![Test 2]()
+
+### Third Combined Task
+
+**Steps:**
+1. Append text: `"Elephants are the largest living land animals."`
+2. Start a new line.
+3. Append text: `"Elephants are scattered throughout sub-Saharan Africa, South Asia, and Southeast Asia and are found in different habitats, including savannahs, forests, deserts, and marshes. They are herbivorous, and they stay near water when it is accessible. They are considered to be keystone species, due to their impact on their environments."`
+4. Start a new line.
+5. Append text: `"Elephants have a fission–fusion society, in which multiple family groups come together to socialise."`
+6. Save to file: `elephant.txt`
+7. Use **Command 24**:
+   - Load file: `elephant.txt`
+   - Key: 8
+   - Save file: `encryptedelephant.txt`
+8. Load from file `encryptedelephant.txt` to ensure that the content was encrypted.
+9. Print text
+10. Use **Command 25**:
+   - Load file: `encryptedelephant.txt`
+   - Key: 8
+   - Save file: `decryptedelephant.txt`
+11. Load from file `decryptedelephant.txt` to ensure that the content was decrypted.
+12. Print text
+
+![Test 3]()
+![Test 3]()

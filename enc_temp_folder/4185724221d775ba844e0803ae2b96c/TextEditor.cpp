@@ -39,12 +39,12 @@ public:
     }
     void Print()
     {
-        cout << "command: " << command
+        std::cout << "command: " << command
             << ", line: " << line
             << ", index: " << index
             << ", number of symbols: " << number
             << ", new text: " << (text ? text : "-")
-            << ", previous text: " << (pText ? pText : "-") << endl;
+            << ", previous text: " << (pText ? pText : "-") << std::endl;
     }
     ~CommandHistory() {
         delete[] text;
@@ -89,10 +89,10 @@ public:
     void DisplayContentsOfStack() {
         NodeHistory* current = top;
         if (current == nullptr) {
-            cout << "The stack is empty!" << endl;
+            std::cout << "The stack is empty!" << std::endl;
             return;
         }
-        cout << "Contents of the stack:" << endl;
+        std::cout << "Contents of the stack:" << std::endl;
         while (current != nullptr) {
             current->commandInfo.Print();
             current = current->next;
@@ -137,13 +137,13 @@ public:
         current = top;
         if (current == nullptr)
         {
-            cout << "Your clipboard is empty!" << endl;
+            std::cout << "Your clipboard is empty!" << std::endl;
             return;
         }
-       cout << "Contents of your clipboard:" << endl;
+        std::cout << "Contents of your clipboard:" << std::endl;
         while (current != nullptr)
         {
-            cout << current->text << endl;
+            std::cout << current->text << std::endl;
             current = current->next;
         }
 
@@ -163,7 +163,7 @@ public:
     void PushToStack(char* text) {
         NodeForClipboard* node = new NodeForClipboard;
         if (node == nullptr) {
-            cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         node->text = _strdup(text);
@@ -192,7 +192,7 @@ class TextEditor
         char** array = new char*[rows];
         if (array == nullptr)
         {
-            cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
 
@@ -201,7 +201,7 @@ class TextEditor
             array[i] = new char[columns];
             if (array[i] == nullptr)
             {
-                cerr << "Memory allocation failed" << endl;
+                std::cerr << "Memory allocation failed" << std::endl;
                 exit(EXIT_FAILURE);
             }
             array[i][0] = '\0';
@@ -212,7 +212,7 @@ class TextEditor
     void AdjustSizeOfLine(int line, int length) {
         char* temp = (char*)realloc(text[line], (length + 1) * sizeof(char));
         if (temp == nullptr) {
-           cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text[line] = temp;
@@ -222,12 +222,12 @@ class TextEditor
 
     void MakeSizeOfEditorSmaller(int line) {
         if (line < 0 || line >= lines) {
-           cout << "Invalid line number" << endl;
+            std::cout << "Invalid line number" << std::endl;
             return;
         }
         size_t newLinesCapacity = lines - line;
         if (newLinesCapacity > lines) {
-            cout << "Invalid newLinesCapacity calculated" << endl;
+            std::cout << "Invalid newLinesCapacity calculated" << std::endl;
             return;
         }
         for (size_t i = lines; i > newLinesCapacity; i--) {
@@ -238,7 +238,7 @@ class TextEditor
         }
         char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
         if (temp == nullptr) {
-            cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text = temp;
@@ -269,7 +269,7 @@ public:
     void Print()
     {
         for (int i = 0; i < lines; i++) {
-          cout << text[i] << endl;
+            std::cout << text[i] << std::endl;
         }
     }
     void MakeLineLonger(size_t currentLength, size_t newLength)
@@ -277,7 +277,7 @@ public:
         size_t newCapacity = currentLength + newLength + 1;
         char* temp = (char*)realloc(text[currentLine], newCapacity * sizeof(char));
         if (temp == nullptr) {
-           cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text[currentLine] = temp;
@@ -288,7 +288,7 @@ public:
         char** temp = (char**)realloc(text, newLinesCapacity * sizeof(char*));
         if (temp == nullptr)
         {
-           cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text = temp;
@@ -296,7 +296,7 @@ public:
             text[i] = (char*)malloc(symbolsPerLine * sizeof(char));
             if (text[i] == nullptr)
             {
-                cerr << "Memory allocation failed" <<endl;
+                std::cerr << "Memory allocation failed" << std::endl;
                 exit(EXIT_FAILURE);
             }
             text[i][0] = '\0';
@@ -376,13 +376,13 @@ public:
     }
     void StartNewLine(bool user)
     {
-       cout << "Your current line: " << currentLine << ". Starting new line..." << endl;
+        std::cout << "Your current line: " << currentLine << ". Starting new line..." << std::endl;
         if (currentLine + 1 > lines)
         {
             MakeMoreLines(currentLine);
         }
         currentLine++;
-        cout << "Your new line: " << currentLine << endl;
+        std::cout << "Your new line: " << currentLine << std::endl;
         if (user)
         {
             CommandHistory commandInfo(2, currentLine, 0, 0, nullptr, nullptr);
@@ -393,7 +393,7 @@ public:
     {
         if (currentLine == 0)
         {
-            cout << "nothing to delete!" <<endl;
+            std::cout << "nothing to delete!" << std::endl;
             return;
         }
         MakeSizeOfEditorSmaller(line);
@@ -423,7 +423,7 @@ public:
 
         if (index + newTextLength > currentLength)
         {
-            cout << "You cannot replace more symbols than present!" << endl;
+            std::cout << "You cannot replace more symbols than present!" << std::endl;
             return;
         }
         char* previousText = SavePreviousText(line, index, newTextLength);       
@@ -441,7 +441,7 @@ public:
     {
         if (clipboard->top == nullptr)
         {
-            cout << "There is nothing to paste, your clipboard is empty!" << endl;
+            std::cout << "There is nothing to paste, your clipboard is empty!" << std::endl;
             return;
         }
         int line, index;
@@ -467,28 +467,28 @@ public:
     }
 
     int ChooseLineIndexNumber(int* line, int* index, int* number, size_t* currentLength) {
-    cout << "Choose line, index and number of symbols:" << endl;
-    if (!(cin >> *line >> *index >> *number) || *line < 0 || *index < 0 || *number < 0) {
-        cout << "Invalid input!" << endl;
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    std::cout << "Choose line, index and number of symbols:" << std::endl;
+    if (!(std::cin >> *line >> *index >> *number) || *line < 0 || *index < 0 || *number < 0) {
+        std::cout << "Invalid input!" << std::endl;
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         return 0;
     }
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     
     *currentLength = strlen(text[*line]);
-    cout << "There are " << lines << " lines and, on your chosen line there are " << *currentLength << " symbols" << endl;
+    std::cout << "There are " << lines << " lines and, on your chosen line there are " << *currentLength << " symbols" << std::endl;
 
     if (*index >= *currentLength || *number > *currentLength - *index || *currentLength == 0 || *line >= lines) {
-        cout << "Something is wrong in your numbers! Look higher!" << endl;
+        std::cout << "Something is wrong in your numbers! Look higher!" << std::endl;
         return 0;
     }
     return 1;
 }
     int ChooseLineIndex(int* line, int* index) {
-        cout << "Choose line and index:" << endl;
+        std::cout << "Choose line and index:" << std::endl;
         if (scanf("%d %d", line, index) != 2 || *line < 0 || *index < 0) {
-            cout << "Invalid input" << endl;
+            std::cout << "Invalid input" << std::endl;
 
             while (getchar() != '\n');
             return 0;
@@ -496,16 +496,11 @@ public:
         while (getchar() != '\n');
         return 1;
     }
-    void Clear(bool user) {
+    void Clear() {
         lines = INITIAL_SIZE_OF_LINES;
         symbolsPerLine = INITIAL_SIZE_OF_ROW;
         text = createArray(INITIAL_SIZE_OF_LINES, INITIAL_SIZE_OF_ROW);
         currentLine = 0;
-        if (user)
-        {
-            CommandHistory commandInfo(10, 0, 0, 0, nullptr, nullptr);
-            stackUndo.PushToStack(&commandInfo);
-        }
     }
 };
 class CaesarCipher
@@ -569,7 +564,7 @@ class UserInput
         char* temp = (char*)realloc(text, newCapacity * sizeof(char));
         if (temp == NULL)
         {
-            cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text = temp;
@@ -580,7 +575,7 @@ class UserInput
         char* temp = (char*)realloc(text, (realLength + 1) * sizeof(char));
         if (temp == nullptr)
         {
-            cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text = temp;
@@ -593,7 +588,7 @@ public:
         char* text = new char[INITIAL_SIZE_OF_ROW];
         if (text == nullptr)
         {
-            cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             exit(EXIT_FAILURE);
         }
         text[0] = '\0';
@@ -630,7 +625,7 @@ public:
 
 class Command
 {
-    static void SaveToFile(TextEditor* editor, const char* fileName, bool user)
+    static void SaveToFile(TextEditor* editor, const char* fileName)
     {
         ofstream file(fileName);
         if (!file.is_open())
@@ -649,23 +644,18 @@ class Command
 
         file.close();
         cout << "Text has been saved successfully!" << endl;
-        if (user)
-        {
-            CommandHistory commandInfo(3, 0, 0, 0, nullptr, nullptr);
-            editor->stackUndo.PushToStack(&commandInfo);
-        }
     }
-    static void LoadFromFile(TextEditor* editor, const char* fileName, bool user) {
-        ifstream file(fileName);
+    static void LoadFromFile(TextEditor* editor, const char* fileName) {
+        std::ifstream file(fileName);
         if (!file.is_open()) {
-            cout << "Error opening file. It looks like it does not exist!" << endl;
+            std::cout << "Error opening file. It looks like it does not exist!" << std::endl;
             return;
         }
 
-        editor->Clear(false);
+        editor->Clear();
 
-        string line;
-        while (getline(file, line)) {
+        std::string line;
+        while (std::getline(file, line)) {
             if (editor->currentLine >= editor->lines) {
                 editor->MakeMoreLines(editor->currentLine + 1);
             }
@@ -676,17 +666,12 @@ class Command
         }
 
         file.close();
-        cout << "File has been loaded successfully!" << endl;
-        if (user)
-        {
-            CommandHistory commandInfo(7, 0, 0, 0, nullptr, nullptr);
-            editor->stackUndo.PushToStack(&commandInfo);
-        }
+        std::cout << "File has been loaded successfully!" << std::endl;
     }
     static void LineToModify(TextEditor* editor)
     {
         int line;
-        cout << "Your current line is: " << editor->currentLine << ". Enter a line you want to modify:" << endl;
+        cout << "Your current line is: " << editor->currentLine << ". Enter a line you want to modify:" << std::endl;
         if (!(cin >> line)) {
             cout << "Invalid input" << endl;
             cin.clear();
@@ -707,7 +692,7 @@ class Command
     }
     static void help()
     {
-        cout << "There is an explanation for every command:\n"
+        std::cout << "There is an explanation for every command:\n"
             "0 - exit\n"
             "1 - append text symbols to the end\n"
             "2 - start the new line\n"
@@ -767,7 +752,7 @@ class Command
         if (M == 0) return;
         int* lps = new int[M];
         if (lps == nullptr) {
-            cerr << "Memory allocation failed" << endl;
+            std::cerr << "Memory allocation failed" << std::endl;
             return;
         }    LPSArray(pattern, M, lps);
 
@@ -786,7 +771,7 @@ class Command
                 }
                 if (j == M)
                 {
-                    cout << "Your pattern is found at location (line, place): " << k << " " << i - j << endl;
+                    std::cout << "Your pattern is found at location (line, place): " << k << " " << i - j << std::endl;
                     foundPattern = true;
                     j = lps[j - 1];
                 }
@@ -805,13 +790,13 @@ class Command
         }
         if (!foundPattern)
         {
-            cout << "No pattern like yours can be found!" << endl;
+            std::cout << "No pattern like yours can be found!" << std::endl;
         }
         delete[] lps;
     }
     static void DoCommand1(TextEditor* editor, UserInput* userInput)
     {
-       cout << "Enter text to append:" << endl;
+        std::cout << "Enter text to append:" << std::endl;
         userInput->TakeUserInput();
         editor->AppendToEnd(userInput->text, true);
     }
@@ -819,10 +804,10 @@ class Command
     static void DoCommand3(TextEditor* editor, UserInput* userInput)
     {
         do {
-            cout << "Enter a filename in which you want to store the text:" << endl;
+            std::cout << "Enter a filename in which you want to store the text:" << std::endl;
             userInput->TakeUserInput();
         } while (strlen(userInput->text) == 0);
-        SaveToFile(editor, userInput->text, true);
+        SaveToFile(editor, userInput->text);
     }
 
     static void DoCommand5(TextEditor* editor, UserInput* userInput)
@@ -831,22 +816,22 @@ class Command
         if (!editor->ChooseLineIndex(&line, &index)) {
             return;
         }
-        cout << "Enter text to insert:" << endl;
+        std::cout << "Enter text to insert:" << std::endl;
         userInput->TakeUserInput();
         editor->InsertAtIndex(line, index, userInput->text, true);
     }
 
     static void DoCommand6(TextEditor* editor, UserInput* userInput)
     {
-       cout << "Enter a pattern:" << endl;
+        std::cout << "Enter a pattern:" << std::endl;
         userInput->TakeUserInput();
         KMPSearch(editor, userInput->text);
     }
     static void DoCommand7(TextEditor* editor, UserInput* userInput)
     {
-        cout << "Enter a filename from which you want to load data into the text editor:" << endl;
+        std::cout << "Enter a filename from which you want to load data into the text editor:" << std::endl;
         userInput->TakeUserInput();
-        LoadFromFile(editor, userInput->text, true);
+        LoadFromFile(editor, userInput->text);
     }
 
     static void DoCommand12(TextEditor* editor) {
@@ -880,10 +865,10 @@ class Command
         size_t currentLength = strlen(editor->text[line]);
         if (line > editor->lines || index > currentLength || currentLength == 0)
         {
-            cout << "Something is wrong in your numbers!" << endl;
+            std::cout << "Something is wrong in your numbers!" << std::endl;
             return;
         }
-       cout << "Enter text to insert:" << endl;
+        std::cout << "Enter text to insert:" << std::endl;
         userInput->TakeUserInput();
         editor->InsertWithReplacement(line, index, userInput->text, true);
     }
@@ -1009,11 +994,6 @@ class Command
         int key;
         cout << "Enter text: " << endl;
         userInput->TakeUserInput();
-        if (strlen(userInput->text) == 0)
-        {
-            cout << "You have not input anything!!!" << endl;
-            return;
-        }
         if (!AskUserToEnterKey(&key))
         {
             return;
@@ -1057,7 +1037,7 @@ class Command
    }
 
     static void DoCommand24or25(UserInput* userInput, bool encrypt, int* key) {
-        cout << "Enter a path of a file, from which you want to load data: " << endl;
+        cout << "Enter a file path: " << endl;
         userInput->TakeUserInput();
         ifstream loadFile(userInput->text, ios::binary);
         if (!loadFile.is_open()) {
@@ -1097,7 +1077,7 @@ public:
         switch (command) {
         
         case 0:
-            cout << "Exiting text editor. Bye!" << endl;
+            std::cout << "Exiting text editor. Bye!" << std::endl;
             break;
         case 1:
             DoCommand1(editor, &userInput);
@@ -1127,7 +1107,7 @@ public:
             help();
             break;
         case 10:
-            editor->Clear(true);
+            editor->Clear();
             cout << "Editor has been cleand!" << endl;
             break;
         case 11:
