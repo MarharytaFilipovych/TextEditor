@@ -314,16 +314,16 @@ Shows the history of changes that can be undone.
 Now the text editor has 25 commands in its arsenal. Hence, I added 4 new commands:
 
 ### 22. Enter some random text with a key (from 0 to 25) to encrypt it:
-![Command 22](link_to_image)
+![Command 22](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-4/Screenshots%20of%20commands%20work/Command%2022.png)
 
 ### 23. Enter some random encrypted text with a key (from 0 to 25) to decrypt it:
-![Command 23](link_to_image)
+![Command 23](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-4/Screenshots%20of%20commands%20work/Command%2023.png)
 
 ### 24. Input a path of a file, whose content you wish to encrypt and save this work in a separate file by entering its path:
-![Command 24](link_to_image)
+![Command 24](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-4/Screenshots%20of%20commands%20work/Command%2024.png)
 
 ### 25. Input a path of a file, whose content you wish to decrypt and save this work in a separate file by entering its path:
-![Command 25](link_to_image)
+![Command 25](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-4/Screenshots%20of%20commands%20work/Command%2025.png)
 
 These commands were implemented using my own dynamic library, where I developed procedures for encryption and decryption functionalities.
 
@@ -337,7 +337,7 @@ These commands were implemented using my own dynamic library, where I developed 
 3. Try again to use the same command with the same text and **key 13**.
 4. Now, when there is an encrypted version, use **Command 23 (decryption)** and enter this encrypted text with the same **key 13**.
 
-![Test 1]()
+![Test 1](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-4/Tests/Test%203%20(1))%20-%203.png)
 
 ### Second Combined Task
 
@@ -351,7 +351,7 @@ These commands were implemented using my own dynamic library, where I developed 
    - Key: 17
    - Save file: `decryptedheart.txt`
 
-![Test 2]()
+![Test 2](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-4/Tests/Test%202%20-%203.png)
 
 ### Third Combined Task
 
@@ -375,5 +375,5 @@ These commands were implemented using my own dynamic library, where I developed 
 11. Load from file `decryptedelephant.txt` to ensure that the content was decrypted.
 12. Print text
 
-![Test 3]()
-![Test 3]()
+![Test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-4/Tests/Test%203%20-%201.png)
+![Test 3](https://github.com/MarharytaFilipovych/TextEditor/blob/assignment-4/Tests/Test%203%20(2)%20-%203.png)
